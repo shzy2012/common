@@ -13,6 +13,19 @@ func init() {
 	Instance = log.New(os.Stdout, "[INFO]", log.LstdFlags|log.Lshortfile)
 }
 
+//SetOutput 设置log输出到文件
+func SetOutput() {
+	//设置日志输出
+	os.MkdirAll("logs", os.ModePerm)
+	f, err := os.OpenFile("logs/app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+
+	Instance.SetOutput(f)
+}
+
 //Info 信息
 func Info(v ...interface{}) {
 	Instance.SetPrefix("[INFO]")
