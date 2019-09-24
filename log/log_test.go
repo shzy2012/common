@@ -1,8 +1,15 @@
 package log
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_Info(t *testing.T) {
+	Info("Info")
+}
+
+func Test_InfoWithOutput(t *testing.T) {
+	SetOutput()
 	Info("Info")
 }
 
