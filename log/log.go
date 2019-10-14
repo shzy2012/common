@@ -18,7 +18,7 @@ func init() {
 func SetOutput() {
 
 	//设置日志输出
-	os.MkdirAll("logs", os.ModePerm)
+	_ = os.MkdirAll("logs", os.ModePerm)
 	f, err := os.OpenFile("logs/app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)

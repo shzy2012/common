@@ -1,24 +1,24 @@
-package tools
+package tool
 
 import (
 	"math/rand"
 	"time"
 )
 
-//Tools 工具集
-type Tools struct {
+//Tool 工具集
+type Tool struct {
 	rand *rand.Rand
 }
 
-//NewTools 创建 Tools
-func NewTools() *Tools {
-	return &Tools{
+//NewTool 创建 Tool
+func NewTool() *Tool {
+	return &Tool{
 		rand: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
 //GetRandomString 获取随机字符串
-func (t *Tools) GetRandomString(length int64) string {
+func (t *Tool) GetRandomString(length int64) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(str)
 	result := []byte{}
