@@ -1,5 +1,38 @@
-#### golang tool
 
+
+<p align="center">
+	<img src="https://github.com/shzy2012/static/blob/master/toolbox.png?raw=true" width="120" height="120">
+</p>
+
+<h1 align="center">Toolbox</h1>
+
+<p align="center">
+
+[![build status][travis-image]][travis-url]   [![codecov][cov-image]][cov-url] [![GitHub license](https://img.shields.io/github/license/laiye-ai/wulai-openapi-sdk-golang?style=social)](https://github.com/laiye-ai/wulai-openapi-sdk-golang/blob/master/LICENSE)
+
+
+[travis-image]: https://travis-ci.org/laiye-ai/wulai-openapi-sdk-golang.svg?branch=master
+
+[travis-url]: https://travis-ci.org/laiye-ai/wulai-openapi-sdk-golang
+
+[cov-image]: https://codecov.io/gh/laiye-ai/wulai-openapi-sdk-golang/branch/master/graph/badge.svg
+
+[cov-url]: https://codecov.io/gh/laiye-ai/wulai-openapi-sdk-golang
+
+</p>
+
+## 安装
+使用 `go get` 下载安装 SDK
+
+```sh
+$ go get -u github.com/shzy2012/common
+```
+
+如果您使用了 glide 管理依赖，您也可以使用 glide 来安装 SDK
+
+```sh
+$ glide get github.com/shzy2012/common
+```
 
 #### log example
 ```go
@@ -19,7 +52,7 @@ func main() {
 [ERRO]2019/10/17 16:32:33 main.go:8: 测试 log
 ````
 
-#### RandomString example
+#### random string example
 ```go
 package main
 
@@ -36,7 +69,7 @@ func main() {
 [INFO]2019/10/17 16:45:34 main.go:10: 5CDIiY3fJ1X501Ri5jsbsuomCUPjjLR2tLXYzQ5p5N0kZRnRHqGhDWrC7Hnw7YMx
 ````
 
-#### StringBuilder example
+#### string builder example
 ```go
 package main
 
