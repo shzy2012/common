@@ -8,16 +8,16 @@
 
 <p align="center">
 
-[![build status][travis-image]][travis-url]   [![codecov][cov-image]][cov-url] [![GitHub license](https://img.shields.io/github/license/laiye-ai/wulai-openapi-sdk-golang?style=social)](https://github.com/laiye-ai/wulai-openapi-sdk-golang/blob/master/LICENSE)
+[![build status][travis-image]][travis-url]   [![codecov][cov-image]][cov-url] [![GitHub license](https://img.shields.io/github/license/laiye-ai/wulai-openapi-sdk-golang?style=social)](https://travis-ci.org/shzy2012/common/blob/master/LICENSE)
 
 
-[travis-image]: https://travis-ci.org/laiye-ai/wulai-openapi-sdk-golang.svg?branch=master
+[travis-image]: https://travis-ci.org/shzy2012/common.svg?branch=master
 
-[travis-url]: https://travis-ci.org/laiye-ai/wulai-openapi-sdk-golang
+[travis-url]: https://travis-ci.org/shzy2012/common
 
-[cov-image]: https://codecov.io/gh/laiye-ai/wulai-openapi-sdk-golang/branch/master/graph/badge.svg
+[cov-image]: https://travis-ci.org/shzy2012/common/branch/master/graph/badge.svg
 
-[cov-url]: https://codecov.io/gh/laiye-ai/wulai-openapi-sdk-golang
+[cov-url]: https://travis-ci.org/shzy2012/common
 
 </p>
 
