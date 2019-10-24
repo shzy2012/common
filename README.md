@@ -34,7 +34,9 @@ $ go get -u github.com/shzy2012/common
 $ glide get github.com/shzy2012/common
 ```
 
-#### log example
+## Example
+
+#### log
 ```go
 package main
 
@@ -52,7 +54,7 @@ func main() {
 [ERRO]2019/10/17 16:32:33 main.go:8: 测试 log
 ````
 
-#### random string example
+#### random string
 ```go
 package main
 
@@ -69,7 +71,7 @@ func main() {
 [INFO]2019/10/17 16:45:34 main.go:10: 5CDIiY3fJ1X501Ri5jsbsuomCUPjjLR2tLXYzQ5p5N0kZRnRHqGhDWrC7Hnw7YMx
 ````
 
-#### string builder example
+#### string builder
 ```go
 package main
 
