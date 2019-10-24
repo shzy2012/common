@@ -3,7 +3,6 @@ package tool
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 func Benchmark_GetRandomString(b *testing.B) {
@@ -23,8 +22,6 @@ func Test_AutoIncrementing(t *testing.T) {
 			}
 		}(n)
 	}
-
-	time.Sleep(time.Second * 10000)
 }
 
 func Benchmark_AutoIncrementing(b *testing.B) {
