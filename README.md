@@ -15,9 +15,9 @@
 
 [travis-url]: https://travis-ci.org/shzy2012/common
 
-[cov-image]: https://travis-ci.org/shzy2012/common/branch/master/graph/badge.svg
+[cov-image]: https://codecov.io/gh/shzy2012/common/branch/master/graph/badge.svg
 
-[cov-url]: https://travis-ci.org/shzy2012/common
+[cov-url]: https://codecov.io/gh/shzy2012/common
 
 </p>
 
