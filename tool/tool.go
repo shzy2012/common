@@ -12,8 +12,8 @@ type Tool struct {
 	counter uint64
 }
 
-//NewTool 创建 Tool
-func NewTool() *Tool {
+//T 创建 Tool
+func T() *Tool {
 	return &Tool{
 		rand: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
