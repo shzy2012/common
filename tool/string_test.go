@@ -11,3 +11,9 @@ func Test_StringBuilder(t *testing.T) {
 		t.Error()
 	}
 }
+
+func Benchmark_GetRandomString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		GetRandomString(64)
+	}
+}
