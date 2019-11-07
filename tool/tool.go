@@ -1,25 +1,52 @@
 package tool
 
 import (
+	"math"
 	"sync/atomic"
 )
 
-//Tool 结构体
-type Tool struct {
-	counter uint64
+var counter int64
+var iset bool
+
+//AutoIncrementing 自动自增(base设置自增起始点)
+func AutoIncrementing(base int64) int64 {
+	if !iset {
+		counter = base
+		iset = true
+	}
+	return atomic.AddInt64(&counter, 1)
 }
 
-//T 创建Tool
-func T() *Tool {
-	return &Tool{}
+//Sum Get sum of numbers
+func Sum(numbers []int) int {
+	sum := 0
+	for _, v := range numbers {
+		sum = sum + v
+	}
+
+	return sum
 }
 
-//SetCounter 设置自增起始点
-func (t *Tool) SetCounter(base uint64) {
-	t.counter = base
+//Max Get max value from numbers
+func Max(numbers []int) int {
+	max := math.MinInt64
+	for _, n := range numbers {
+		if n > max {
+			max = n
+		}
+	}
+
+	return max
 }
 
-//AutoIncrementing 自动自增
-func (t *Tool) AutoIncrementing() uint64 {
-	return atomic.AddUint64(&t.counter, 1)
+//Min Get min value from numbers
+func Min(numbers []int) int {
+	min := math.MaxInt64
+	for _, n := range numbers {
+		if n < min {
+			min = n
+		}
+	}
+
+	return min
 }

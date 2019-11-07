@@ -3,23 +3,38 @@ package tool
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func Test_AutoIncrementing(t *testing.T) {
-	tool := T()
-	//tool.SetCounter(999999999)
-	for n := 0; n <= 10; n++ {
+	for n := 0; n < 1; n++ {
 		go func(n int) {
-			for i := 0; i < 1000000000; i++ {
-				fmt.Println(n, "-", tool.AutoIncrementing())
+			for i := 0; i < 1000000; i++ {
+				fmt.Println(n, "-", AutoIncrementing(-1))
 			}
 		}(n)
 	}
+
+	time.Sleep(time.Second * 1)
+}
+
+func Test_Sum(t *testing.T) {
+	list := []int{1, 3, 5}
+	fmt.Printf("sum:%v\n", Sum(list))
+}
+
+func Test_Max(t *testing.T) {
+	list := []int{1, 3, 5}
+	fmt.Printf("max:%v\n", Max(list))
+}
+
+func Test_Min(t *testing.T) {
+	list := []int{1, 3, 5}
+	fmt.Printf("min:%v\n", Min(list))
 }
 
 func Benchmark_AutoIncrementing(b *testing.B) {
-	tool := T()
 	for i := 0; i < b.N; i++ {
-		fmt.Println(tool.AutoIncrementing())
+		fmt.Println(AutoIncrementing(-1))
 	}
 }
