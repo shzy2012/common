@@ -25,8 +25,8 @@ type Client struct {
 //NewClient  实例化http client
 func NewClient() *Client {
 	client := &Client{
-		MaxIdleConns:    30,
-		MaxConnsPerHost: 30,
+		MaxIdleConns:    100,
+		MaxConnsPerHost: 100,
 		Debug:           false,
 		httpClient: &http.Client{
 			Timeout: 8 * time.Second, //设置HTTP超时时间
