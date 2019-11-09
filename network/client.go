@@ -126,11 +126,13 @@ func (c *Client) SetHTTPTimeout(timeout time.Duration) {
 }
 
 //HTTPGet 发起HTTP Get请求
-func (c *Client) HTTPGet(url string) (*HTTPResponse, error) {
-	return c.Request("GET", url, nil, 0)
+func (c *Client) HTTPGet(url string) ([]byte, error) {
+	response, err := c.Request("GET", url, nil, 0)
+	return response.ResponseBodyBytes, err
 }
 
 //HTTPost 发起HTTP Post请求
-func (c *Client) HTTPost(url string, input []byte) (*HTTPResponse, error) {
-	return c.Request("POST", url, input, 0)
+func (c *Client) HTTPost(url string, input []byte) ([]byte, error) {
+	response, err := c.Request("POST", url, input, 0)
+	return response.ResponseBodyBytes, err
 }
