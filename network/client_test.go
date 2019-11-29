@@ -86,8 +86,7 @@ func Test_Request2(t *testing.T) {
 
 func Test_HttpGet(t *testing.T) {
 
-	client := NewClient()
-	_, err := client.HTTPGet("http://qq.com")
+	_, err := HTTPGet("http://qq.com")
 	if err != nil {
 		if serErr, ok := err.(*errors.ServerError); ok {
 			t.Error("[Test_PostWithNetError]=> failed.", serErr)
@@ -101,8 +100,7 @@ func Test_HttpGet(t *testing.T) {
 
 func Test_HTTPost(t *testing.T) {
 
-	client := NewClient()
-	_, err := client.HTTPost("http://qq.com", []byte(`data`))
+	_, err := HTTPost("http://qq.com", []byte(`data`))
 	if err != nil {
 		if serErr, ok := err.(*errors.ServerError); ok {
 			t.Error("[Test_PostWithNetError]=> failed.", serErr)

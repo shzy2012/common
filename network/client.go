@@ -12,6 +12,13 @@ import (
 	"github.com/shzy2012/common/log"
 )
 
+//HTTP Client
+var HTTP *Client
+
+func init() {
+	HTTP = NewClient()
+}
+
 //Client http 客户端
 type Client struct {
 	httpClient      *http.Client
@@ -126,13 +133,13 @@ func (c *Client) SetHTTPTimeout(timeout time.Duration) {
 }
 
 //HTTPGet 发起HTTP Get请求
-func (c *Client) HTTPGet(url string) ([]byte, error) {
-	response, err := c.Request("GET", url, nil, 0)
+func HTTPGet(url string) ([]byte, error) {
+	response, err := HTTP.Request("GET", url, nil, 0)
 	return response.ResponseBodyBytes, err
 }
 
 //HTTPost 发起HTTP Post请求
-func (c *Client) HTTPost(url string, input []byte) ([]byte, error) {
-	response, err := c.Request("POST", url, input, 0)
+func HTTPost(url string, input []byte) ([]byte, error) {
+	response, err := HTTP.Request("POST", url, input, 0)
 	return response.ResponseBodyBytes, err
 }
