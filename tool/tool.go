@@ -1,6 +1,7 @@
 package tool
 
 import (
+	"fmt"
 	"math"
 	"sync/atomic"
 )
@@ -49,4 +50,13 @@ func Min(numbers []int) int {
 	}
 
 	return min
+}
+
+//F64SliceToStringSlice convert float64 slice to string slice
+func F64SliceToStringSlice(list []float64) []string {
+	tmp := make([]string, 0)
+	for _, ele := range list {
+		tmp = append(tmp, fmt.Sprintf("%v", ele))
+	}
+	return tmp
 }
