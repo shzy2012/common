@@ -45,3 +45,27 @@ func GetRandomString(length uint64) string {
 	}
 	return string(result)
 }
+
+//Join 返回包含引号("")的字符串
+func Join(a []string, sep string) string {
+	switch len(a) {
+	case 0:
+		return ""
+	case 1:
+		return "\"" + a[0] + "\""
+	}
+	n := len(sep) * (len(a) - 1)
+	for i := 0; i < len(a); i++ {
+		n += len(a[i]) + 2
+	}
+
+	var b strings.Builder
+	b.Grow(n)
+	b.WriteString("\"" + a[0] + "\"")
+	for _, s := range a[1:] {
+		b.WriteString(sep)
+		b.WriteString("\"" + s + "\"")
+	}
+
+	return b.String()
+}
