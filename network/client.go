@@ -22,7 +22,7 @@ func init() {
 //Client http 客户端
 type Client struct {
 	httpClient      *http.Client
-	ContentType     string
+	Header          map[string]string
 	Version         string
 	MaxIdleConns    int
 	MaxConnsPerHost int
@@ -35,6 +35,7 @@ func NewClient() *Client {
 		MaxIdleConns:    100,
 		MaxConnsPerHost: 100,
 		Debug:           false,
+		Header:          make(map[string]string, 0),
 		httpClient: &http.Client{
 			Timeout: 8 * time.Second, //设置HTTP超时时间
 		},
@@ -68,10 +69,14 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
 
-	//设置Content-Type
-	req.Header.Set("Content-Type", "application/json;charset=utf-8")
-	if c.ContentType != "" {
-		req.Header.Set("Content-Type", c.ContentType)
+	//设置header
+	for k, v := range c.Header {
+		req.Header.Set(k, v)
+	}
+
+	//设置默认
+	if req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/json;charset=utf-8")
 	}
 
 	//默认 retry
