@@ -149,15 +149,15 @@ func Paincln(v ...interface{}) {
 
 //Printf Printf
 func Printf(format string, v ...interface{}) {
-	Instance.Output(2, fmt.Sprintf(format, v...))
+	_ = Instance.Output(2, fmt.Sprintf(format, v...))
 }
 
 //Println Println
 func Println(v ...interface{}) {
-	Instance.Output(2, fmt.Sprintln(v...))
+	_ = Instance.Output(2, fmt.Sprintln(v...))
 }
 
 //Print Print
 func Print(v ...interface{}) {
-	Instance.Output(2, fmt.Sprint(v...))
+	_ = Instance.Output(2, fmt.Sprint(v...))
 }

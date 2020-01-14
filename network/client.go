@@ -2,6 +2,7 @@ package network
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -35,9 +36,12 @@ func NewClient() *Client {
 		MaxIdleConns:    100,
 		MaxConnsPerHost: 100,
 		Debug:           false,
-		Header:          make(map[string]string, 0),
+		Header:          make(map[string]string),
 		httpClient: &http.Client{
-			Timeout: 8 * time.Second, //设置HTTP超时时间
+			Timeout: 6 * time.Second, //设置HTTP超时时间
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // disable security checks globally for all requests of the default client
+			},
 		},
 	}
 	return client
@@ -135,6 +139,11 @@ func (c *Client) SetTransport(transport http.RoundTripper) {
 //SetHTTPTimeout 设置http 超时时间
 func (c *Client) SetHTTPTimeout(timeout time.Duration) {
 	c.httpClient.Timeout = timeout
+}
+
+//SetDebug 设置debug
+func (c *Client) SetDebug(d bool) {
+	c.Debug = true
 }
 
 //HTTPGet 发起HTTP Get请求
