@@ -111,3 +111,7 @@ func Test_HTTPost(t *testing.T) {
 		}
 	}
 }
+
+func Test_PostForm(t *testing.T) {
+
+}

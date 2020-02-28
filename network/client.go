@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -73,14 +76,17 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
 
-	//设置header
-	for k, v := range c.Header {
-		req.Header.Set(k, v)
-	}
-
 	//设置默认
 	if req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json;charset=utf-8")
+	}
+
+	//设置header
+	for k, v := range c.Header {
+		req.Header.Set(k, v)
+		if c.Debug {
+			log.Debugf("[header]=>%s:%s \n", k, v)
+		}
 	}
 
 	//默认 retry
@@ -156,4 +162,87 @@ func HTTPGet(url string) ([]byte, error) {
 func HTTPost(url string, input []byte) ([]byte, error) {
 	response, err := HTTP.Request("POST", url, input, 0)
 	return response.ResponseBodyBytes, err
+}
+
+//PostForm 发起PostForm请求
+func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPResponse, error) {
+
+	var err error
+	response := &HTTPResponse{}
+	// Prepare a form that you will submit to that URL.
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	for key, r := range values {
+		var fw io.Writer
+		if x, ok := r.(io.Closer); ok {
+			defer x.Close()
+		}
+		// Add an image file
+		if x, ok := r.(*os.File); ok {
+			if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
+				return response, nil
+			}
+		} else {
+			// Add other fields
+			if fw, err = w.CreateFormField(key); err != nil {
+				return response, nil
+			}
+		}
+		if _, err = io.Copy(fw, r); err != nil {
+			return response, err
+		}
+
+	}
+	// Don't forget to close the multipart writer.
+	// If you don't close it, your request will be missing the terminating boundary.
+	w.Close()
+
+	req, err := http.NewRequest("POST", url, &b)
+	if err != nil {
+		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
+		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
+	}
+
+	//设置header
+	for k, v := range c.Header {
+		req.Header.Set(k, v)
+		if c.Debug {
+			log.Debugf("[header]=>%s:%s \n", k, v)
+		}
+	}
+
+	// Don't forget to set the content type, this will contain the boundary.
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
+		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
+	}
+	if resp != nil {
+		defer func() {
+			err = resp.Body.Close()
+		}()
+	}
+
+	response.StatusCode = resp.StatusCode
+	response.Status = resp.Status
+	response.OriginHTTPResponse = resp //原始的Http Response
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
+		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
+	}
+
+	response.ResponseBodyBytes = bytes //http 响应体
+	//如果StatusCode不等于200,则错误
+	if response.StatusCode != 200 {
+		response.Message = string(response.ResponseBodyBytes)
+		return response, errors.NewServerError(resp.StatusCode, response.Message, err)
+	}
+
+	if c.Debug {
+		log.Debugf("[http resp]=>%s \n", bytes)
+	}
+
+	return response, nil
 }

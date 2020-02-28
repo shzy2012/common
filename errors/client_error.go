@@ -4,33 +4,33 @@ import "fmt"
 
 const (
 	DefaultClientErrorStatus = 400
-	DefaultClientErrorCode   = "SDK.ClientError"
+	DefaultClientErrorCode   = "ClientError"
 
-	NetWorkErrorCode    = "SDK.NetWorkError"
+	NetWorkErrorCode    = "NetWorkError"
 	NetWorkErrorMessage = "Network error %s,try using err.Message() to get detail message"
 
-	UnsupportedMethodErrorCode    = "SDK.UnsupportedMethod"
+	UnsupportedMethodErrorCode    = "UnsupportedMethod"
 	UnsupportedMethodErrorMessage = "The version (%s) is not supported,retry using (%s)"
 
-	UnsupportedTypeErrorCode    = "SDK.UnsupportedType"
+	UnsupportedTypeErrorCode    = "UnsupportedType"
 	UnsupportedTypeErrorMessage = "Specified type (%s) is not supported,retry using (%s)"
 
-	UnknownRequestTypeErrorCode    = "SDK.UnknownRequestType"
+	UnknownRequestTypeErrorCode    = "UnknownRequestType"
 	UnknownRequestTypeErrorMessage = "Unknown Request Type: %s"
 
-	MissingParamErrorCode = "SDK.MissingParam"
-	InvalidParamErrorCode = "SDK.InvalidParam"
+	MissingParamErrorCode = "MissingParam"
+	InvalidParamErrorCode = "InvalidParam"
 
-	InvalidFormatErrorCode    = "SDK.InvalidFormat"
+	InvalidFormatErrorCode    = "InvalidFormat"
 	InvalidFormatErrorMessage = "Format invalid %s, try using err.Message() to get detail message"
 
-	JsonMarshalErrorCode    = "SDK.JsonMarshalError"
+	JsonMarshalErrorCode    = "JsonMarshalError"
 	JsonMarshalErrorMessage = "Failed to marshal response, try using err.Message() to get detail message"
 
-	JsonUnmarshalErrorCode    = "SDK.JsonUnmarshalError"
+	JsonUnmarshalErrorCode    = "JsonUnmarshalError"
 	JsonUnmarshalErrorMessage = "Failed to unmarshal response,try using err.Message() to get detail message"
 
-	TimeoutErrorCode    = "SDK.TimeoutError"
+	TimeoutErrorCode    = "TimeoutError"
 	TimeoutErrorMessage = "The request timed out %s times(%s for retry), perhaps we should have the threshold raised a little?"
 )
 
