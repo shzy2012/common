@@ -1,1 +1,5 @@
+github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
+github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/mafredri/cdp v0.25.0 h1:nXhdpjP8Nrhw+9jnMlljEF6xs2B3vXI/wSiKDOvOXGs=
+github.com/mafredri/cdp v0.25.0/go.mod h1:hgdiA0yp1uqhSaDOHJWPgXpMbh+LAfUdD9vbN2AM8gE=
 gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df/go.mod h1:LRQQ+SO6ZHR7tOkpBDuZnXENFzX8qRjMDMyPD6BRkCw=

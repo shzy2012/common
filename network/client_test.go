@@ -1,8 +1,11 @@
 package network
 
 import (
+	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -113,5 +116,25 @@ func Test_HTTPost(t *testing.T) {
 }
 
 func Test_PostForm(t *testing.T) {
+	// t := time.Now()
+	// timestamp := fmt.Sprintf("%v", t.UnixNano()/1000000)
+	file := "xxx.wav"
+	param := `{
+		"param":"data param",
+	}`
 
+	formdata := map[string]io.Reader{
+		"param": strings.NewReader(param),
+		"file":  strings.NewReader(file),
+	}
+
+	client := NewClient()
+	asrURL := "http://xxx.com"
+	resp, err := client.PostForm(asrURL, formdata)
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		return
+	}
+
+	fmt.Printf("%+v\n", resp)
 }
