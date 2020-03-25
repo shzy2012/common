@@ -118,10 +118,19 @@ func Test_HTTPost(t *testing.T) {
 func Test_PostForm(t *testing.T) {
 	// t := time.Now()
 	// timestamp := fmt.Sprintf("%v", t.UnixNano()/1000000)
-	file := "xxx.wav"
-	param := `{
-		"param":"data param",
-	}`
+
+	file := "http://pmtest.wul.ai:8090/voice/上海录音/recorder234_20200109092716389_71_1072_200861.wav"
+	param := fmt.Sprintf(`{
+		"dialog":{
+			"productId": "914010631"
+		},
+		"metaObject":{
+			"recordId": "123457",
+			"priority": 100,
+			"speechSeparate": true,
+			"path":"%s"
+		}
+	}`, file)
 
 	formdata := map[string]io.Reader{
 		"param": strings.NewReader(param),
@@ -129,12 +138,17 @@ func Test_PostForm(t *testing.T) {
 	}
 
 	client := NewClient()
-	asrURL := "http://xxx.com"
+	client.SetDebug(true)
+	client.Header["Content-Type"] = "multipart/form-data"
+	client.Header["X-AISPEECH-TOKEN"] = "5754e573-0d8d-4639-87d6-b8f91ca11477" //token
+	client.Header["X-AISPEECH-PRODUCT-ID"] = "914010631"
+
+	asrURL := "http://api.talkinggenie.com/smart/sinspection/api/v1/filePathUpload"
 	resp, err := client.PostForm(asrURL, formdata)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		return
 	}
 
-	fmt.Printf("%+v\n", resp)
+	fmt.Printf("%s\n", resp.ResponseBodyBytes)
 }
