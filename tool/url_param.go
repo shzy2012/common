@@ -13,6 +13,5 @@ func GetParam(url *url.URL, name string) string {
 
 //GetParams 获取Url的值
 func GetParams(url *url.URL, name string) []string {
-	keys, _ := url.Query()[name]
-	return keys
+	return url.Query()[name]
 }
