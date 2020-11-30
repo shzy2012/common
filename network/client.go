@@ -31,6 +31,12 @@ type Client struct {
 	MaxIdleConns    int
 	MaxConnsPerHost int
 	Debug           bool
+	Auth            BasicAuth
+}
+
+//BasicAuth 基础认证
+type BasicAuth struct {
+	Username, Password string
 }
 
 //NewClient  实例化http client
@@ -46,6 +52,7 @@ func NewClient() *Client {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // disable security checks globally for all requests of the default client
 			},
 		},
+		Auth: BasicAuth{},
 	}
 	return client
 }
@@ -74,6 +81,11 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
+	}
+
+	//增加 BasicAuth
+	if strings.TrimSpace(c.Auth.Username) != "" {
+		req.SetBasicAuth(c.Auth.Username, c.Auth.Password)
 	}
 
 	//设置默认

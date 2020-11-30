@@ -60,3 +60,19 @@ func F64SliceToStringSlice(list []float64) []string {
 	}
 	return tmp
 }
+
+//IsNum 是否是数字
+func IsNum(b byte) bool {
+	if b >= 48 && b <= 57 {
+		return true
+	}
+	return false
+}
+
+//IsChar 是否是字母 A-Z and a-z
+func IsChar(b byte) bool {
+	if (b >= 65 && b <= 90) || (b >= 97 && b <= 122) {
+		return true
+	}
+	return false
+}
