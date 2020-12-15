@@ -73,8 +73,8 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	} else if strings.ToUpper(action) == "GET" {
 		action = "GET"
 	} else {
-		errorMsg := fmt.Sprintf(errors.UnsupportedTypeErrorMessage, action, "POST,GET")
-		return nil, errors.NewClientError(errors.UnsupportedTypeErrorCode, errorMsg, err)
+		//默认支持其他method
+		action = strings.ToUpper(action)
 	}
 
 	req, err := http.NewRequest(action, url, bytes.NewReader(input))
