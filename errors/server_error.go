@@ -1,9 +1,5 @@
 package errors
 
-import (
-	"fmt"
-)
-
 //ServerError 服务端错误定义
 type ServerError struct {
 	error
@@ -23,7 +19,7 @@ func NewServerError(httpStatus int, message string, originErr error) Error {
 }
 
 func (err *ServerError) Error() string {
-	return fmt.Sprintf("SDK.ServerError\t Message: %s", err.message)
+	return err.message
 }
 
 //OriginError HTTP 原始错误信息
