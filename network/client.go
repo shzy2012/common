@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"strings"
 	"time"
@@ -19,19 +20,32 @@ import (
 //HTTP Client
 var HTTP *Client
 
+const (
+	POST    = "POST"
+	GET     = "GET"
+	PUT     = "PUT"
+	PATCH   = "PATCH"
+	DELETE  = "DELETE"
+	HEAD    = "HEAD"
+	OPTIONS = "OPTIONS"
+	TRACE   = "TRACE"
+	CONNECT = "CONNECT"
+)
+
 func init() {
 	HTTP = NewClient()
 }
 
 //Client http 客户端
 type Client struct {
-	httpClient      *http.Client
+	HttpClient      *http.Client
 	Header          map[string]string
 	Version         string
 	MaxIdleConns    int
 	MaxConnsPerHost int
 	Debug           bool
 	Auth            BasicAuth
+	Cookies         []*http.Cookie
 }
 
 //BasicAuth 基础认证
@@ -41,23 +55,32 @@ type BasicAuth struct {
 
 //NewClient  实例化http client
 func NewClient() *Client {
+
+	header := map[string]string{"User-Agent": "Go-Client 1.0"}
+	jar, _ := cookiejar.New(nil)
 	client := &Client{
 		MaxIdleConns:    100,
 		MaxConnsPerHost: 100,
 		Debug:           false,
-		Header:          make(map[string]string),
-		httpClient: &http.Client{
+		Header:          header, //make(map[string]string),
+		HttpClient: &http.Client{
 			Timeout: 6 * time.Second, //设置HTTP超时时间
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // disable security checks globally for all requests of the default client
 			},
+			Jar: jar, //If Jar is nil, cookies are only sent if they are explicitly
 		},
 		Auth: BasicAuth{},
 	}
 	return client
 }
 
-//Request 发起HTTP请求
+/* Request 发起HTTP请求
+* action:POST\GET\PUT\PATCH\DELETE\HEAD\OPTIONS\TRACE\CONNECT
+* url:请求地址
+* input:请求参数
+* retry:重试次数,默认0(不重试)
+ */
 func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResponse, error) {
 
 	var err error
@@ -77,6 +100,7 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		action = strings.ToUpper(action)
 	}
 
+	//构建HTTP请求
 	req, err := http.NewRequest(action, url, bytes.NewReader(input))
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
@@ -106,9 +130,13 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		retry = 0
 	}
 
+	//设置cookies
+	c.HttpClient.Jar.SetCookies(req.URL, c.Cookies)
+
+	//发起HTTP请求
 	var resp *http.Response
 	for i := 0; i <= retry; i++ {
-		resp, err = c.httpClient.Do(req)
+		resp, err = c.HttpClient.Do(req)
 		if err == nil {
 			break
 		}
@@ -151,17 +179,27 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 
 //SetTransport 设置Transport
 func (c *Client) SetTransport(transport http.RoundTripper) {
-	c.httpClient.Transport = transport
+	c.HttpClient.Transport = transport
 }
 
 //SetHTTPTimeout 设置http 超时时间
 func (c *Client) SetHTTPTimeout(timeout time.Duration) {
-	c.httpClient.Timeout = timeout
+	c.HttpClient.Timeout = timeout
 }
 
 //SetDebug 设置debug
 func (c *Client) SetDebug(d bool) {
 	c.Debug = true
+}
+
+//SetCookie 添加cookie
+func (c *Client) SetCookie(cookie *http.Cookie) {
+	c.Cookies = append(c.Cookies, cookie)
+}
+
+//ClearCookies 清除cookies
+func (c *Client) ClearCookies() {
+	c.Cookies = c.Cookies[0:0]
 }
 
 //HTTPGet 发起HTTP Get请求
