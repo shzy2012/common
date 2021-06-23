@@ -263,7 +263,7 @@ func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPRespons
 
 	// Don't forget to set the content type, this will contain the boundary.
 	req.Header.Set("Content-Type", w.FormDataContentType())
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
