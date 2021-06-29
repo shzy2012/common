@@ -21,6 +21,10 @@ import (
 var HTTP *Client
 
 const (
+	ContentType = "Content-Type"
+)
+
+const (
 	POST    = "POST"
 	GET     = "GET"
 	PUT     = "PUT"
@@ -30,6 +34,11 @@ const (
 	OPTIONS = "OPTIONS"
 	TRACE   = "TRACE"
 	CONNECT = "CONNECT"
+)
+
+const (
+	XwwwFormUrlencoded = "application/x-www-form-urlencoded"
+	FormData           = "application/form-data"
 )
 
 func init() {
@@ -125,13 +134,15 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		}
 	}
 
+	//设置cookies
+	for _, c := range c.Cookies {
+		req.AddCookie(c)
+	}
+
 	//默认 retry
 	if retry < 0 {
 		retry = 0
 	}
-
-	//设置cookies
-	c.HttpClient.Jar.SetCookies(req.URL, c.Cookies)
 
 	//发起HTTP请求
 	var resp *http.Response
@@ -215,6 +226,7 @@ func HTTPost(url string, input []byte) ([]byte, error) {
 }
 
 //PostForm 发起PostForm请求
+//from-data方式
 func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPResponse, error) {
 
 	var err error
@@ -227,7 +239,7 @@ func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPRespons
 		if x, ok := r.(io.Closer); ok {
 			defer x.Close()
 		}
-		// Add an image file
+		// file
 		if x, ok := r.(*os.File); ok {
 			if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
 				return response, nil
@@ -295,4 +307,17 @@ func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPRespons
 	}
 
 	return response, nil
+}
+
+// PostForm2
+// x-www-form-urlencoded 方式
+func (c *Client) PostForm2(url string, values map[string]string) (*HTTPResponse, error) {
+	var err error
+	response := &HTTPResponse{}
+
+	// x-www-form-urlencoded
+	// if condition {
+
+	// }
+	return response, err
 }

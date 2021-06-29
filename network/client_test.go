@@ -115,11 +115,30 @@ func Test_HTTPost(t *testing.T) {
 	}
 }
 
-func Test_PostForm(t *testing.T) {
-	// t := time.Now()
-	// timestamp := fmt.Sprintf("%v", t.UnixNano()/1000000)
+// application/x-www-form-urlencoded
+// 数据被编码成以 '&' 分隔的键-值对, 同时以 '=' 分隔键和值.
+// https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/POST#%E7%A4%BA%E4%BE%8B
+func Test_HTTPostWithXwwwFormUrlencoded(t *testing.T) {
 
-	file := "http://pmtest.wul.ai:8090/voice/上海录音/recorder234_20200109092716389_71_1072_200861.wav"
+	client := NewClient()
+	client.Header["Content-Type"] = XwwwFormUrlencoded
+	resp, err := client.Request(POST, "http://xxxx/login.action", []byte("username=aaa&password=bbb&os_cookie=true"), 0)
+	if err != nil {
+		if serErr, ok := err.(*errors.ServerError); ok {
+			t.Error("[Test_PostWithNetError]=> failed.", serErr)
+		} else if _, ok := err.(*errors.ClientError); ok {
+
+		} else {
+			t.Error("[Test_PostWithNetError]=> failed.")
+		}
+	}
+
+	fmt.Printf("%+v\n", resp.OriginHTTPResponse.Cookies())
+}
+
+func Test_PostForm(t *testing.T) {
+
+	file := "local_or_remote.wav"
 	param := fmt.Sprintf(`{
 		"dialog":{
 			"productId": "914010631"
@@ -138,10 +157,6 @@ func Test_PostForm(t *testing.T) {
 	}
 
 	client := NewClient()
-	client.SetDebug(true)
-	client.Header["Content-Type"] = "multipart/form-data"
-	client.Header["X-AISPEECH-TOKEN"] = "5754e573-0d8d-4639-87d6-b8f91ca11477" //token
-	client.Header["X-AISPEECH-PRODUCT-ID"] = "914010631"
 
 	asrURL := "http://api.talkinggenie.com/smart/sinspection/api/v1/filePathUpload"
 	resp, err := client.PostForm(asrURL, formdata)
