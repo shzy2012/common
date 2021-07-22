@@ -11,7 +11,7 @@ import (
 var Instance *log.Logger
 
 func init() {
-	Instance = log.New(os.Stdout, "[INFO]", log.LstdFlags|log.Lshortfile)
+	Instance = log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
 }
 
 //SetOutput 设置log输出到文件
