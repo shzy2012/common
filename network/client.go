@@ -296,8 +296,13 @@ func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPRespons
 	}
 
 	response.ResponseBodyBytes = bytes //http 响应体
-	//如果StatusCode不等于200,则错误
-	if response.StatusCode != 200 {
+	/*
+		https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/201
+		200 OK
+		201 Created
+		202 Accepted
+	*/
+	if response.StatusCode != 200 && response.StatusCode != 201 && response.StatusCode != 202 {
 		response.Message = string(response.ResponseBodyBytes)
 		return response, errors.NewServerError(resp.StatusCode, response.Message, err)
 	}
