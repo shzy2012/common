@@ -294,7 +294,9 @@ func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPRespons
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
-
+	if c.Debug {
+		log.Debugf("[http resp]=>%s \n", bytes)
+	}
 	response.ResponseBodyBytes = bytes //http 响应体
 	/*
 		https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/201
@@ -302,16 +304,13 @@ func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPRespons
 		201 Created
 		202 Accepted
 	*/
-	if response.StatusCode != 200 && response.StatusCode != 201 && response.StatusCode != 202 {
+	switch response.StatusCode {
+	case 200, 201, 202:
+		return response, nil
+	default:
 		response.Message = string(response.ResponseBodyBytes)
 		return response, errors.NewServerError(resp.StatusCode, response.Message, err)
 	}
-
-	if c.Debug {
-		log.Debugf("[http resp]=>%s \n", bytes)
-	}
-
-	return response, nil
 }
 
 // PostForm2
