@@ -173,19 +173,23 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
-
-	response.ResponseBodyBytes = bytes //http 响应体
-	//如果StatusCode不等于200,则错误
-	if response.StatusCode != 200 {
-		response.Message = string(response.ResponseBodyBytes)
-		return response, errors.NewServerError(resp.StatusCode, response.Message, err)
-	}
-
 	if c.Debug {
 		log.Debugf("[http resp]=>%s \n", bytes)
 	}
-
-	return response, nil
+	response.ResponseBodyBytes = bytes //http 响应体
+	/*
+		https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/201
+		200 OK
+		201 Created
+		202 Accepted
+	*/
+	switch response.StatusCode {
+	case 200, 201, 202:
+		return response, nil
+	default:
+		response.Message = string(response.ResponseBodyBytes)
+		return response, errors.NewServerError(resp.StatusCode, response.Message, err)
+	}
 }
 
 //SetTransport 设置Transport
