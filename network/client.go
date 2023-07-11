@@ -232,10 +232,12 @@ func HTTPost(url string, input []byte) ([]byte, error) {
 //PostForm 发起PostForm请求
 //from-data方式
 /* example
+file, _ := os.Open("file.png")             //读取文件
+defer file.Close()
+
 form := map[string]io.Reader{}             //定义form
-file, _ := os.Open("file.png")             //文件类型
 form["source"] = strings.NewReader("post") //字符串
-form["file"] = bufio.NewReader(file)
+form["file"] = file                        //文件类型
 */
 func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse, error) {
 
