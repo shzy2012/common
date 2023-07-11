@@ -17,7 +17,7 @@ import (
 	"github.com/shzy2012/common/log"
 )
 
-//HTTP Client
+// HTTP Client
 var HTTP *Client
 
 const (
@@ -45,7 +45,7 @@ func init() {
 	HTTP = NewClient()
 }
 
-//Client http 客户端
+// Client http 客户端
 type Client struct {
 	HttpClient      *http.Client
 	Header          map[string]string
@@ -57,12 +57,12 @@ type Client struct {
 	Cookies         []*http.Cookie
 }
 
-//BasicAuth 基础认证
+// BasicAuth 基础认证
 type BasicAuth struct {
 	Username, Password string
 }
 
-//NewClient  实例化http client
+// NewClient  实例化http client
 func NewClient() *Client {
 
 	header := map[string]string{"User-Agent": "Go-Client 1.0"}
@@ -192,38 +192,38 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	}
 }
 
-//SetTransport 设置Transport
+// SetTransport 设置Transport
 func (c *Client) SetTransport(transport http.RoundTripper) {
 	c.HttpClient.Transport = transport
 }
 
-//SetHTTPTimeout 设置http 超时时间
+// SetHTTPTimeout 设置http 超时时间
 func (c *Client) SetHTTPTimeout(timeout time.Duration) {
 	c.HttpClient.Timeout = timeout
 }
 
-//SetDebug 设置debug
+// SetDebug 设置debug
 func (c *Client) SetDebug(d bool) {
 	c.Debug = true
 }
 
-//SetCookie 添加cookie
+// SetCookie 添加cookie
 func (c *Client) SetCookie(cookie *http.Cookie) {
 	c.Cookies = append(c.Cookies, cookie)
 }
 
-//ClearCookies 清除cookies
+// ClearCookies 清除cookies
 func (c *Client) ClearCookies() {
 	c.Cookies = c.Cookies[0:0]
 }
 
-//HTTPGet 发起HTTP Get请求
+// HTTPGet 发起HTTP Get请求
 func HTTPGet(url string) ([]byte, error) {
 	response, err := HTTP.Request("GET", url, nil, 0)
 	return response.ResponseBodyBytes, err
 }
 
-//HTTPost 发起HTTP Post请求
+// HTTPost 发起HTTP Post请求
 func HTTPost(url string, input []byte) ([]byte, error) {
 	response, err := HTTP.Request("POST", url, input, 0)
 	return response.ResponseBodyBytes, err
@@ -231,14 +231,20 @@ func HTTPost(url string, input []byte) ([]byte, error) {
 
 //PostForm 发起PostForm请求
 //from-data方式
-func (c *Client) PostForm(url string, values map[string]io.Reader) (*HTTPResponse, error) {
+/* example
+form := map[string]io.Reader{}             //定义form
+file, _ := os.Open("file.png")             //文件类型
+form["source"] = strings.NewReader("post") //字符串
+form["file"] = bufio.NewReader(file)
+*/
+func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse, error) {
 
 	var err error
 	response := &HTTPResponse{}
 	// Prepare a form that you will submit to that URL.
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
-	for key, r := range values {
+	for key, r := range form {
 		var fw io.Writer
 		if x, ok := r.(io.Closer); ok {
 			defer x.Close()
