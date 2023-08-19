@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -168,7 +167,7 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	response.StatusCode = resp.StatusCode
 	response.Status = resp.Status
 	response.OriginHTTPResponse = resp //原始的Http Response
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
@@ -184,7 +183,7 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		202 Accepted
 	*/
 	switch response.StatusCode {
-	case 200, 201, 202:
+	case 200, 201, 202, 203, 204, 205, 206:
 		return response, nil
 	default:
 		response.Message = string(response.ResponseBodyBytes)
@@ -301,7 +300,7 @@ func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse,
 	response.StatusCode = resp.StatusCode
 	response.Status = resp.Status
 	response.OriginHTTPResponse = resp //原始的Http Response
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
@@ -317,7 +316,7 @@ func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse,
 		202 Accepted
 	*/
 	switch response.StatusCode {
-	case 200, 201, 202:
+	case 200, 201, 202, 203, 204, 205, 206:
 		return response, nil
 	default:
 		response.Message = string(response.ResponseBodyBytes)
