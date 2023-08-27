@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -78,4 +79,18 @@ func ToHex(src []byte) string {
 
 func ToHex2(src string) string {
 	return fmt.Sprintf("%x", src)
+}
+
+// https://juejin.cn/post/6844903648045039624
+func IsChinesePhone(phone string) bool {
+	reg1 := regexp.MustCompile(`^1(?:3[0-9]|4[5-9]|5[0-9]|6[12456]|7[0-8]|8[0-9]|9[0-9])[0-9]{8}$`)
+	if reg1 == nil {
+		return false
+	}
+	//根据规则提取关键信息
+	if len(reg1.FindAllStringSubmatch(phone, 1)) > 0 {
+		return true
+	}
+
+	return false
 }
