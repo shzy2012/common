@@ -1,12 +1,15 @@
 package tool
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/shzy2012/common/log"
 )
 
 var r *rand.Rand
@@ -79,6 +82,18 @@ func ToHex(src []byte) string {
 
 func ToHex2(src string) string {
 	return fmt.Sprintf("%x", src)
+}
+
+func Base64Encode(str string) string {
+	return base64.StdEncoding.EncodeToString([]byte(str))
+}
+
+func Base64Decode(str string) string {
+	dist, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		log.Infof("%s\n", err.Error())
+	}
+	return string(dist)
 }
 
 // https://juejin.cn/post/6844903648045039624
