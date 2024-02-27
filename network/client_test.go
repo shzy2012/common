@@ -107,8 +107,8 @@ func Test_HTTPost(t *testing.T) {
 	if err != nil {
 		if serErr, ok := err.(*errors.ServerError); ok {
 			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
+		} else if cErr, ok := err.(*errors.ClientError); ok {
+			t.Error("[Test_Http404]=> failed.", cErr)
 		} else {
 			t.Error("[Test_PostWithNetError]=> failed.")
 		}
@@ -126,8 +126,8 @@ func Test_HTTPostWithXwwwFormUrlencoded(t *testing.T) {
 	if err != nil {
 		if serErr, ok := err.(*errors.ServerError); ok {
 			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
+		} else if cErr, ok := err.(*errors.ClientError); ok {
+			t.Error("[Test_Http404]=> failed.", cErr)
 		} else {
 			t.Error("[Test_PostWithNetError]=> failed.")
 		}
@@ -166,4 +166,18 @@ func Test_PostForm(t *testing.T) {
 	}
 
 	fmt.Printf("%s\n", resp.ResponseBodyBytes)
+}
+
+func Test_Http404(t *testing.T) {
+
+	_, err := HTTP.Request("GET", "https://qq.com.cn/abc", nil, 0)
+	if err != nil {
+		if serErr, ok := err.(*errors.ServerError); ok {
+			t.Error("[Test_Http404]=> failed.", serErr)
+		} else if cErr, ok := err.(*errors.ClientError); ok {
+			t.Error("[Test_Http404]=> failed.", cErr)
+		} else {
+			t.Error("[Test_Http404]=> failed.")
+		}
+	}
 }

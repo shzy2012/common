@@ -182,6 +182,7 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		201 Created
 		202 Accepted
 	*/
+
 	switch response.StatusCode {
 	case 200, 201, 202, 203, 204, 205, 206:
 		return response, nil
