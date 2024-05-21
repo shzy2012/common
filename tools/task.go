@@ -27,35 +27,35 @@
 	tasks.Run(" run tasks")
 */
 
-package tool
+package tools
 
 type taskFunc func(data interface{}) interface{}
 
-//Task task链
+// Task task链
 type Task struct {
 	tasks []taskFunc
 }
 
-//NewTask 创建task链
+// NewTask 创建task链
 func NewTask() *Task {
 	return &Task{
 		tasks: make([]taskFunc, 0),
 	}
 }
 
-//AddTask 添加task
+// AddTask 添加task
 func (t *Task) AddTask(task taskFunc) *Task {
 	t.tasks = append(t.tasks, task)
 	return t
 }
 
-//AddTasks 添加多个task
+// AddTasks 添加多个task
 func (t *Task) AddTasks(tasks ...taskFunc) *Task {
 	t.tasks = append(t.tasks, tasks...)
 	return t
 }
 
-//Run 运行task
+// Run 运行task
 func (t *Task) Run(data interface{}) interface{} {
 	for _, task := range t.tasks {
 		data = task(data)

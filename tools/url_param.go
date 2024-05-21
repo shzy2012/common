@@ -1,8 +1,8 @@
-package tool
+package tools
 
 import "net/url"
 
-//GetParam 获取Url的值
+// GetParam 获取Url的值
 func GetParam(url *url.URL, name string) string {
 	keys, ok := url.Query()[name]
 	if !ok || len(keys[0]) < 1 {
@@ -11,7 +11,7 @@ func GetParam(url *url.URL, name string) string {
 	return keys[0]
 }
 
-//GetParams 获取Url的值
+// GetParams 获取Url的值
 func GetParams(url *url.URL, name string) []string {
 	return url.Query()[name]
 }

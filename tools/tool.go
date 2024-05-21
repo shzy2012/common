@@ -1,4 +1,4 @@
-package tool
+package tools
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 var counter int64
 var iset bool
 
-//AutoIncrementing 自动自增(base设置自增起始点)
+// AutoIncrementing 自动自增(base设置自增起始点)
 func AutoIncrementing(base int64) int64 {
 	if !iset {
 		counter = base
@@ -18,7 +18,7 @@ func AutoIncrementing(base int64) int64 {
 	return atomic.AddInt64(&counter, 1)
 }
 
-//Sum Get sum of numbers
+// Sum Get sum of numbers
 func Sum(numbers []int) int {
 	sum := 0
 	for _, v := range numbers {
@@ -28,7 +28,7 @@ func Sum(numbers []int) int {
 	return sum
 }
 
-//Max Get max value from numbers
+// Max Get max value from numbers
 func Max(numbers []int) int {
 	max := math.MinInt64
 	for _, n := range numbers {
@@ -40,7 +40,7 @@ func Max(numbers []int) int {
 	return max
 }
 
-//Min Get min value from numbers
+// Min Get min value from numbers
 func Min(numbers []int) int {
 	min := math.MaxInt64
 	for _, n := range numbers {
@@ -52,7 +52,7 @@ func Min(numbers []int) int {
 	return min
 }
 
-//F64SliceToStringSlice convert float64 slice to string slice
+// F64SliceToStringSlice convert float64 slice to string slice
 func F64SliceToStringSlice(list []float64) []string {
 	tmp := make([]string, 0)
 	for _, ele := range list {
@@ -61,7 +61,7 @@ func F64SliceToStringSlice(list []float64) []string {
 	return tmp
 }
 
-//IsNum 是否是数字
+// IsNum 是否是数字
 func IsNum(b byte) bool {
 	if b >= 48 && b <= 57 {
 		return true
@@ -69,7 +69,7 @@ func IsNum(b byte) bool {
 	return false
 }
 
-//IsChar 是否是字母 A-Z and a-z
+// IsChar 是否是字母 A-Z and a-z
 func IsChar(b byte) bool {
 	if (b >= 65 && b <= 90) || (b >= 97 && b <= 122) {
 		return true

@@ -1,4 +1,4 @@
-package tool
+package tools
 
 // rrWeighted is a wrapped weighted item that is used to implement LVS weighted round robin algorithm.
 type rrWeighted struct {

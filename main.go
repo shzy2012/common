@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/shzy2012/common/tool"
+	"github.com/shzy2012/common/tools"
 )
 
 func main() {
-	tasks := tool.NewTask()
+	tasks := tools.NewTask()
 
 	task1 := func(data interface{}) interface{} {
 		msg := fmt.Sprintf("%s\n %s", data, "exec=> i am task1")

@@ -1,4 +1,4 @@
-package tool
+package tools
 
 func DistinectIntSlice(slice []int) []int {
 	keys := make(map[int]bool)
