@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
-	"regexp"
 	"strings"
 	"time"
 
@@ -41,9 +40,20 @@ func (s *StringBuilderBody) Build() string {
 	return s.origin
 }
 
-// GetRandomString 获取随机字符串
+// 获取随机字符串
 func GetRandomString(length uint64) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	bytes := []byte(str)
+	result := []byte{}
+	for i := uint64(0); i < length; i++ {
+		result = append(result, bytes[r.Intn(int(len(bytes)))])
+	}
+	return string(result)
+}
+
+// 获取随机数字
+func GetRandomNumber(length uint64) string {
+	str := "123456789"
 	bytes := []byte(str)
 	result := []byte{}
 	for i := uint64(0); i < length; i++ {
@@ -94,18 +104,4 @@ func Base64Decode(str string) string {
 		log.Infof("%s\n", err.Error())
 	}
 	return string(dist)
-}
-
-// https://juejin.cn/post/6844903648045039624
-func IsChinesePhone(phone string) bool {
-	reg1 := regexp.MustCompile(`^1(?:3[0-9]|4[5-9]|5[0-9]|6[12456]|7[0-8]|8[0-9]|9[0-9])[0-9]{8}$`)
-	if reg1 == nil {
-		return false
-	}
-	//根据规则提取关键信息
-	if len(reg1.FindAllStringSubmatch(phone, 1)) > 0 {
-		return true
-	}
-
-	return false
 }
