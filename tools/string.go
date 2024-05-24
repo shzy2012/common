@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strings"
 	"time"
 
@@ -104,4 +105,13 @@ func Base64Decode(str string) string {
 		log.Infof("%s\n", err.Error())
 	}
 	return string(dist)
+}
+
+// 使用多种符号分割字符串
+// text:字符串
+// symbols:分隔符.比如匹配逗号、分号: ,;
+func Splits(text, symbols string) []string {
+	re := regexp.MustCompile(fmt.Sprintf(`[%s]+`, symbols))
+	// 使用正则表达式进行分割
+	return re.Split(text, -1)
 }

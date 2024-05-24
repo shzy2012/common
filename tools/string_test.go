@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -10,6 +11,13 @@ func Test_StringBuilder(t *testing.T) {
 	if result != "fruit,phone,fruit" {
 		t.Error()
 	}
+}
+
+func Test_Splits(t *testing.T) {
+	// aba
+	s := "a,b,c;d"
+	result := Splits(s, ",;")
+	fmt.Printf("%s\n", result)
 }
 
 func Benchmark_GetRandomString(b *testing.B) {

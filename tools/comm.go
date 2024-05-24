@@ -14,6 +14,7 @@ import (
 
 const Long = "2006-01-02 15:04:05"
 const Short = "2006-01-02"
+const Time = "15:04:05"
 
 var counter int64
 var iset bool
