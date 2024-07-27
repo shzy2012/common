@@ -52,3 +52,13 @@ func ByteCountIEC(b int64) string {
 	return fmt.Sprintf("%.1f %ciB",
 		float64(b)/float64(div), "KMGTPE"[exp])
 }
+
+func BytesToSize(bytes int64) string {
+	sizes := []string{"Bytes", "KB", "MB", "GB", "TB"}
+	var i int
+	var val float64 = float64(bytes)
+	for i = 0; i < len(sizes) && val >= 1024; i++ {
+		val /= 1024
+	}
+	return fmt.Sprintf("%.2f %s", val, sizes[i])
+}
