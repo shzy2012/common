@@ -9,7 +9,6 @@ func Test_Info(t *testing.T) {
 }
 
 func Test_InfoWithOutput(t *testing.T) {
-	SetOutput()
 	Info("Info")
 }
 
