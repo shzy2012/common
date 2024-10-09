@@ -115,3 +115,29 @@ func Splits(text, symbols string) []string {
 	// 使用正则表达式进行分割
 	return re.Split(text, -1)
 }
+
+/*
+s:字符串
+fillChar:填充符号
+width:目标宽度
+*/
+func PaddingFromLeft(s string, fillChar string, width int) string {
+	if len(s) < width {
+		return strings.Repeat(fillChar, width-len(s)) + s
+	}
+
+	return s
+}
+
+/*
+s:字符串
+fillChar:填充符号
+width:目标宽度
+*/
+func PaddingFromRight(s string, fillChar string, width int) string {
+	// 自定义填充函数
+	if len(s) < width {
+		return s + strings.Repeat(fillChar, width-len(s))
+	}
+	return s
+}
