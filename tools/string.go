@@ -54,9 +54,9 @@ func GetRandomString(length uint64) string {
 
 // 获取随机数字
 func GetRandomNumber(length uint64) string {
-	str := "123456789"
+	str := "0123456789"
 	bytes := []byte(str)
-	result := []byte{}
+	result := make([]byte, length)
 	for i := uint64(0); i < length; i++ {
 		result = append(result, bytes[r.Intn(int(len(bytes)))])
 	}
