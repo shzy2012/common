@@ -55,6 +55,10 @@ func Test_Debugln(t *testing.T) {
 	Debugln("Debug")
 }
 
+func Test_SetOutputWithPath(t *testing.T) {
+	SetOutputWithPath("/Users/xxx/abc")
+}
+
 func Benchmark_Info(t *testing.B) {
 	for i := 0; i < t.N; i++ {
 		Info(i)

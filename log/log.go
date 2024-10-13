@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -18,10 +19,37 @@ func init() {
 // SetOutput 设置log输出到文件
 func SetOutput() {
 	//设置日志输出
-	_ = os.MkdirAll("logs", os.ModePerm)
+	_, err := os.Stat("logs")
+	if os.IsNotExist(err) {
+		err := os.MkdirAll("logs", os.ModePerm)
+		if err != nil {
+			log.Print(err)
+		}
+	}
+
 	f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", time.Now().Format("20060102")), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+		log.Printf("error opening file: %v\n", err)
+	}
+
+	mw := io.MultiWriter(os.Stdout, f)
+	Instance.SetOutput(mw)
+}
+
+func SetOutputWithPath(path string) {
+	//设置日志输出
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			log.Print(err)
+		}
+	}
+
+	logpath := filepath.Join(path, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
+	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Printf("error opening file: %v\n", err)
 	}
 
 	mw := io.MultiWriter(os.Stdout, f)
