@@ -5,10 +5,19 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"hash/fnv"
 )
 
-// EncodeMD5 md5 encryption
-func EncodeMD5(value string) string {
+func FNV(s string) uint64 {
+	// 使用 FNV 哈希算法
+	h := fnv.New64a()
+	h.Write([]byte(s))
+
+	return h.Sum64()
+}
+
+// md5
+func MD5(value string) string {
 	m := md5.New()
 	m.Write([]byte(value))
 
