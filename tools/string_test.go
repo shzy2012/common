@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func Test_StringBuilder(t *testing.T) {
@@ -18,6 +19,11 @@ func Test_Splits(t *testing.T) {
 	s := "a,b,c;d"
 	result := Splits(s, ",;")
 	fmt.Printf("%s\n", result)
+}
+
+func Test_TimeAgo(t *testing.T) {
+	t1 := time.Now().Add(-50000 * time.Hour)
+	fmt.Println(TimeAgo(t1))
 }
 
 func Benchmark_GetRandomString(b *testing.B) {
