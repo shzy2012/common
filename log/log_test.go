@@ -9,7 +9,9 @@ func Test_Info(t *testing.T) {
 }
 
 func Test_InfoWithOutput(t *testing.T) {
+	SetOutput(false)
 	Info("Info")
+	Flush()
 }
 
 func Test_Infof(t *testing.T) {
@@ -56,7 +58,7 @@ func Test_Debugln(t *testing.T) {
 }
 
 func Test_SetOutputWithPath(t *testing.T) {
-	SetOutputWithPath("/Users/xxx/abc")
+	SetOutputWithPath(true, "/Users/xxx/abc")
 }
 
 func Benchmark_Info(t *testing.B) {

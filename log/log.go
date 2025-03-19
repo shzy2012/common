@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -11,13 +12,18 @@ import (
 
 // Instance log实例
 var Instance *log.Logger
+var bufferWriter *bufio.Writer // 缓冲区
+
+const bufferSize = 256 * 1024 // 256KB 的缓冲区大小
 
 func init() {
 	Instance = log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
+	go flushDaemon() // 启动一个后台线程，定时刷新缓冲区
 }
 
 // SetOutput 设置log输出到文件
-func SetOutput() {
+// useStdout 为true时，日志输出到标准输出，否则输出到文件;false时，日志输出到文件;
+func SetOutput(useStdout bool) error {
 	//设置日志输出
 	_, err := os.Stat("logs")
 	if os.IsNotExist(err) {
@@ -27,17 +33,47 @@ func SetOutput() {
 		}
 	}
 
-	f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", time.Now().Format("20060102")), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := openFile(fmt.Sprintf("logs/%s.log", time.Now().Format("20060102")))
 	if err != nil {
 		log.Printf("error opening file: %v\n", err)
+		return err
 	}
 
-	mw := io.MultiWriter(os.Stdout, f)
-	Instance.SetOutput(mw)
+	if useStdout {
+		bufferWriter = bufio.NewWriterSize(f, bufferSize)
+		mw := io.MultiWriter(os.Stdout, bufferWriter)
+		Instance.SetOutput(mw)
+	} else {
+		bufferWriter = bufio.NewWriterSize(f, bufferSize)
+		Instance.SetOutput(bufferWriter)
+	}
+
+	return nil
 }
 
-func SetOutputWithPath(path string) {
-	//设置日志输出
+func SetOutputWithPath(useStdout bool, path string) error {
+
+	f, err := openFile(path)
+	if err != nil {
+		log.Printf("error opening file: %v\n", err)
+		return err
+	}
+
+	if useStdout {
+		bufferWriter = bufio.NewWriterSize(f, bufferSize)
+		mw := io.MultiWriter(os.Stdout, bufferWriter)
+		Instance.SetOutput(mw)
+	} else {
+		bufferWriter = bufio.NewWriterSize(f, bufferSize)
+		Instance.SetOutput(bufferWriter)
+	}
+
+	return nil
+}
+
+// 打开文件
+func openFile(path string) (*os.File, error) {
+
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(path, os.ModePerm)
@@ -47,13 +83,28 @@ func SetOutputWithPath(path string) {
 	}
 
 	logpath := filepath.Join(path, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
-	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Printf("error opening file: %v\n", err)
-	}
+	return os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+}
 
-	mw := io.MultiWriter(os.Stdout, f)
-	Instance.SetOutput(mw)
+// Flush 刷新缓冲区，将日志写入文件
+func Flush() {
+	if bufferWriter != nil {
+		err := bufferWriter.Flush()
+		if err != nil {
+			log.Printf("error flushing buffer: %v\n", err)
+		}
+	}
+}
+
+func flushDaemon() {
+	tick := time.NewTicker(30 * time.Second)
+	defer tick.Stop()
+	for {
+		select {
+		case <-tick.C:
+			Flush()
+		}
+	}
 }
 
 // Info 信息
