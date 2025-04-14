@@ -10,7 +10,7 @@ func Test_Info(t *testing.T) {
 
 func Test_InfoWithOutput(t *testing.T) {
 	SetOutput(false)
-	Info("Info")
+	Info("i am info")
 	Flush()
 }
 
@@ -58,7 +58,9 @@ func Test_Debugln(t *testing.T) {
 }
 
 func Test_SetOutputWithPath(t *testing.T) {
-	SetOutputWithPath(true, "./adbc")
+	SetOutputWithPath("./mypath")
+	Info("i SetOutputWithPath info")
+	Flush()
 }
 
 func Benchmark_Info(t *testing.B) {

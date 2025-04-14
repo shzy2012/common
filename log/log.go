@@ -23,8 +23,12 @@ func init() {
 }
 
 // SetOutput 设置log输出到文件
-// useStdout 为true时，日志输出到标准输出，否则输出到文件;false时，日志输出到文件;
+// useStdout 为true时，日志只输出到标准输出，为false时，日志同时输出到标准输出和文件
 func SetOutput(useStdout bool) error {
+	if useStdout {
+		Instance.SetOutput(os.Stdout)
+		return nil
+	}
 
 	_, err := os.Stat(defaultPath)
 	if os.IsNotExist(err) {
@@ -40,19 +44,14 @@ func SetOutput(useStdout bool) error {
 		return err
 	}
 
-	if useStdout {
-		bufferWriter = bufio.NewWriterSize(f, bufferSize)
-		mw := io.MultiWriter(os.Stdout, bufferWriter)
-		Instance.SetOutput(mw)
-	} else {
-		bufferWriter = bufio.NewWriterSize(f, bufferSize)
-		Instance.SetOutput(bufferWriter)
-	}
+	bufferWriter = bufio.NewWriterSize(f, bufferSize)
+	mw := io.MultiWriter(os.Stdout, bufferWriter)
+	Instance.SetOutput(mw)
 
 	return nil
 }
 
-func SetOutputWithPath(useStdout bool, yourPath string) error {
+func SetOutputWithPath(yourPath string) error {
 
 	_, err := os.Stat(yourPath)
 	if os.IsNotExist(err) {
@@ -69,14 +68,9 @@ func SetOutputWithPath(useStdout bool, yourPath string) error {
 		return err
 	}
 
-	if useStdout {
-		bufferWriter = bufio.NewWriterSize(f, bufferSize)
-		mw := io.MultiWriter(os.Stdout, bufferWriter)
-		Instance.SetOutput(mw)
-	} else {
-		bufferWriter = bufio.NewWriterSize(f, bufferSize)
-		Instance.SetOutput(bufferWriter)
-	}
+	bufferWriter = bufio.NewWriterSize(f, bufferSize)
+	mw := io.MultiWriter(os.Stdout, bufferWriter)
+	Instance.SetOutput(mw)
 
 	return nil
 }
@@ -95,10 +89,8 @@ func flushDaemon() {
 	tick := time.NewTicker(30 * time.Second)
 	defer tick.Stop()
 	for {
-		select {
-		case <-tick.C:
-			Flush()
-		}
+		<-tick.C
+		Flush()
 	}
 }
 
