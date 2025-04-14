@@ -98,34 +98,27 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		log.Debugf("[http req]=>%s to %s \n%s\n", action, url, input)
 	}
 
-	//处理 http action
-	if strings.ToUpper(action) == "POST" {
-		action = "POST"
-	} else if strings.ToUpper(action) == "GET" {
-		action = "GET"
-	} else {
-		//默认支持其他method
-		action = strings.ToUpper(action)
-	}
+	// 简化HTTP方法处理
+	action = strings.ToUpper(action)
 
-	//构建HTTP请求
+	// 构建HTTP请求
 	req, err := http.NewRequest(action, url, bytes.NewReader(input))
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
 
-	//增加 BasicAuth
+	// 增加 BasicAuth
 	if strings.TrimSpace(c.Auth.Username) != "" {
 		req.SetBasicAuth(c.Auth.Username, c.Auth.Password)
 	}
 
-	//设置默认
+	// 设置默认Content-Type
 	if req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json;charset=utf-8")
 	}
 
-	//设置header
+	// 设置header
 	for k, v := range c.Header {
 		req.Header.Set(k, v)
 		if c.Debug {
@@ -133,17 +126,17 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		}
 	}
 
-	//设置cookies
-	for _, c := range c.Cookies {
-		req.AddCookie(c)
+	// 设置cookies
+	for _, cookie := range c.Cookies {
+		req.AddCookie(cookie)
 	}
 
-	//默认 retry
+	// 确保retry非负
 	if retry < 0 {
 		retry = 0
 	}
 
-	//发起HTTP请求
+	// 改进重试逻辑
 	var resp *http.Response
 	for i := 0; i <= retry; i++ {
 		resp, err = c.HttpClient.Do(req)
@@ -151,38 +144,44 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 			break
 		}
 
-		time.Sleep(time.Second * 1)
+		// 如果不是最后一次重试，添加退避时间
+		if i < retry {
+			backoffTime := time.Duration(i+1) * time.Second
+			time.Sleep(backoffTime)
+		}
 	}
 
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
+
 	if resp != nil {
 		defer func() {
-			err = resp.Body.Close()
+			closeErr := resp.Body.Close()
+			if err == nil && closeErr != nil {
+				err = closeErr
+			}
 		}()
 	}
 
 	response.StatusCode = resp.StatusCode
 	response.Status = resp.Status
-	response.OriginHTTPResponse = resp //原始的Http Response
+	response.OriginHTTPResponse = resp // 原始的Http Response
+
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
+
 	if c.Debug {
 		log.Debugf("[http resp]=>%s \n", bytes)
 	}
-	response.ResponseBodyBytes = bytes //http 响应体
-	/*
-		https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/201
-		200 OK
-		201 Created
-		202 Accepted
-	*/
 
+	response.ResponseBodyBytes = bytes // http 响应体
+
+	// 处理HTTP状态码
 	switch response.StatusCode {
 	case 200, 201, 202, 203, 204, 205, 206:
 		return response, nil

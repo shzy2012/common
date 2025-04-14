@@ -58,7 +58,7 @@ func Test_Debugln(t *testing.T) {
 }
 
 func Test_SetOutputWithPath(t *testing.T) {
-	SetOutputWithPath(true, "/Users/xxx/abc")
+	SetOutputWithPath(true, "./adbc")
 }
 
 func Benchmark_Info(t *testing.B) {

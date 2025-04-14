@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
+	"path"
 	"time"
 )
 
@@ -15,6 +15,7 @@ var Instance *log.Logger
 var bufferWriter *bufio.Writer // 缓冲区
 
 const bufferSize = 256 * 1024 // 256KB 的缓冲区大小
+const defaultPath string = "logs"
 
 func init() {
 	Instance = log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
@@ -24,18 +25,18 @@ func init() {
 // SetOutput 设置log输出到文件
 // useStdout 为true时，日志输出到标准输出，否则输出到文件;false时，日志输出到文件;
 func SetOutput(useStdout bool) error {
-	//设置日志输出
-	_, err := os.Stat("logs")
+
+	_, err := os.Stat(defaultPath)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll("logs", os.ModePerm)
+		err := os.MkdirAll(defaultPath, os.ModePerm)
 		if err != nil {
 			log.Print(err)
 		}
 	}
 
-	f, err := openFile(fmt.Sprintf("logs/%s.log", time.Now().Format("20060102")))
+	logpath := path.Join(defaultPath, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
+	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Printf("error opening file: %v\n", err)
 		return err
 	}
 
@@ -51,9 +52,18 @@ func SetOutput(useStdout bool) error {
 	return nil
 }
 
-func SetOutputWithPath(useStdout bool, path string) error {
+func SetOutputWithPath(useStdout bool, yourPath string) error {
 
-	f, err := openFile(path)
+	_, err := os.Stat(yourPath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(yourPath, os.ModePerm)
+		if err != nil {
+			log.Print(err)
+		}
+	}
+
+	logpath := path.Join(yourPath, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
+	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("error opening file: %v\n", err)
 		return err
@@ -69,21 +79,6 @@ func SetOutputWithPath(useStdout bool, path string) error {
 	}
 
 	return nil
-}
-
-// 打开文件
-func openFile(path string) (*os.File, error) {
-
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		err := os.MkdirAll(path, os.ModePerm)
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
-	logpath := filepath.Join(path, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
-	return os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 }
 
 // Flush 刷新缓冲区，将日志写入文件
