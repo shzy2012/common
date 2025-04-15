@@ -3,7 +3,6 @@ package log
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path"
@@ -42,8 +41,15 @@ func SetPath(path string) {
 // 设置日志输出方式: stdout和log file
 // onlyStdout 为true时,日志只输出到标准输出;为false时,日志同时输出到标准输出和文件.
 func SetOutput(onlyStdout bool) error {
+	// 先刷新并关闭之前的缓冲区
+	if bufferWriter != nil {
+		Flush()
+		bufferWriter = nil
+	}
+
+	// 标准输出
+	Instance.SetOutput(os.Stdout)
 	if onlyStdout {
-		Instance.SetOutput(os.Stdout)
 		return nil
 	}
 
@@ -51,19 +57,19 @@ func SetOutput(onlyStdout bool) error {
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(defaultPath, os.ModePerm)
 		if err != nil {
-			log.Print(err)
+			return fmt.Errorf("failed to create log directory: %v", err)
 		}
 	}
 
+	// 输出到文件
 	logpath := path.Join(defaultPath, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
 	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open log file: %v", err)
 	}
 
 	bufferWriter = bufio.NewWriterSize(f, bufferSize)
-	mw := io.MultiWriter(os.Stdout, bufferWriter)
-	Instance.SetOutput(mw)
+	Instance.SetOutput(bufferWriter)
 
 	return nil
 }
