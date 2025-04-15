@@ -9,9 +9,14 @@ func Test_Info(t *testing.T) {
 }
 
 func Test_InfoWithOutput(t *testing.T) {
-	SetOutput(false)
+	SetRealtimeWriteLog(true)
+	SetOutput(true)
 	Info("i am info")
-	Flush()
+}
+
+func Test_SetOutputWithPath(t *testing.T) {
+	SetPath("./mypath")
+	Info("i SetOutputWithPath info")
 }
 
 func Test_Infof(t *testing.T) {
@@ -55,12 +60,6 @@ func Test_Debugf(t *testing.T) {
 
 func Test_Debugln(t *testing.T) {
 	Debugln("Debug")
-}
-
-func Test_SetOutputWithPath(t *testing.T) {
-	SetOutputWithPath("./mypath")
-	Info("i SetOutputWithPath info")
-	Flush()
 }
 
 func Benchmark_Info(t *testing.B) {
