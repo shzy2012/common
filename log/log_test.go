@@ -9,8 +9,8 @@ func Test_Info(t *testing.T) {
 }
 
 func Test_InfoWithOutput(t *testing.T) {
-	SetRealtimeWriteLog(true)
-	SetOutput(false)
+	SetRealtimeWrite(true)
+	SetOutput(true)
 	Info("i am info")
 }
 

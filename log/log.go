@@ -3,6 +3,7 @@ package log
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -21,8 +22,8 @@ func init() {
 	go flushDaemon() // 启动一个后台线程，定时刷新缓冲区
 }
 
-// SetRealtimeWriteLog 设置是否实时写入日志
-func SetRealtimeWriteLog(realtime bool) {
+// SetRealtimeWrite 设置是否实时写入日志
+func SetRealtimeWrite(realtime bool) {
 	realtimeWrite = realtime
 }
 
@@ -47,9 +48,9 @@ func SetOutput(onlyStdout bool) error {
 		bufferWriter = nil
 	}
 
-	// 标准输出
-	Instance.SetOutput(os.Stdout)
 	if onlyStdout {
+		// 标准输出
+		Instance.SetOutput(os.Stdout)
 		return nil
 	}
 
@@ -69,7 +70,8 @@ func SetOutput(onlyStdout bool) error {
 	}
 
 	bufferWriter = bufio.NewWriterSize(f, bufferSize)
-	Instance.SetOutput(bufferWriter)
+	/* MultiWriter遇到错误后，会停止写入 */
+	Instance.SetOutput(io.MultiWriter(bufferWriter, os.Stdout))
 
 	return nil
 }
@@ -85,6 +87,7 @@ func Flush() {
 }
 
 func flushDaemon() {
+
 	tick := time.NewTicker(30 * time.Second)
 	defer tick.Stop()
 	for {
