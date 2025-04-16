@@ -10,7 +10,7 @@ func Test_Info(t *testing.T) {
 
 func Test_InfoWithOutput(t *testing.T) {
 	SetRealtimeWrite(true)
-	SetOutput(true)
+	SetOutput(false)
 	Info("i am info")
 }
 

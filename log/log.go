@@ -3,7 +3,6 @@ package log
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path"
@@ -70,8 +69,10 @@ func SetOutput(onlyStdout bool) error {
 	}
 
 	bufferWriter = bufio.NewWriterSize(f, bufferSize)
-	/* MultiWriter遇到错误后，会停止写入 */
-	Instance.SetOutput(io.MultiWriter(bufferWriter, os.Stdout))
+	Instance.SetOutput(NewCustomMultiWriter(os.Stdout, bufferWriter))
+
+	/* io.MultiWriter 遇到错误后，会停止写入 */
+	// Instance.SetOutput(io.MultiWriter(bufferWriter, os.Stdout))
 
 	return nil
 }
