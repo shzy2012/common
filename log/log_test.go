@@ -2,6 +2,7 @@ package log
 
 import (
 	"testing"
+	"time"
 )
 
 func Test_Info(t *testing.T) {
@@ -10,7 +11,10 @@ func Test_Info(t *testing.T) {
 
 func Test_InfoWithOutput(t *testing.T) {
 	SetOutput(false)
-	Info("i am info")
+	for i := 0; i < 1000; i++ {
+		Info("i am info", i)
+		time.Sleep(time.Second * 1)
+	}
 }
 
 func Test_SetOutputWithPath(t *testing.T) {

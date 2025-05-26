@@ -2,10 +2,9 @@ package log
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"path"
-	"time"
 )
 
 // Instance log实例
@@ -23,10 +22,9 @@ func SetPath(path string) {
 	}
 }
 
-// 设置日志输出方式: stdout和log file
+// SetOutput 设置日志输出方式: stdout和log file
 // onlyStdout 为true时,日志只输出到标准输出;为false时,日志同时输出到标准输出和文件.
 func SetOutput(onlyStdout bool) error {
-
 	if onlyStdout {
 		// 标准输出
 		Instance.SetOutput(os.Stdout)
@@ -42,14 +40,12 @@ func SetOutput(onlyStdout bool) error {
 	}
 
 	// 输出到文件
-	logpath := path.Join(defaultPath, fmt.Sprintf("%s.log", time.Now().Format("20060102")))
-	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	customWriter, err := NewCustomWriter(defaultPath)
 	if err != nil {
-		return fmt.Errorf("failed to open log file: %v", err)
+		return fmt.Errorf("failed to create custom writer: %v", err)
 	}
 
-	Instance.SetOutput(NewCustomMultiWriter(os.Stdout, f))
-
+	Instance.SetOutput(io.MultiWriter(os.Stdout, customWriter))
 	return nil
 }
 
