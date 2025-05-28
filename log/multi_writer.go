@@ -22,11 +22,13 @@ func (mw *CustomMultiWriter) Write(p []byte) (n int, err error) {
 		if err != nil {
 			log.Println("write error", err)
 			// return n, err
+			// 如果写入失败，继续写入下一个 writer
 			continue
 		}
 		if n != len(p) {
 			log.Println("short write", n, len(p))
 			// return n, io.ErrShortWrite
+			// 如果写入长度不一致，继续写入下一个 writer
 			continue
 		}
 	}
