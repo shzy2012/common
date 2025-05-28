@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 )
@@ -40,12 +39,12 @@ func SetOutput(onlyStdout bool) error {
 	}
 
 	// 输出到文件
-	customWriter, err := NewCustomWriter(defaultPath)
+	fileWriter, err := NewFileWriter(defaultPath)
 	if err != nil {
 		return fmt.Errorf("failed to create custom writer: %v", err)
 	}
 
-	Instance.SetOutput(io.MultiWriter(os.Stdout, customWriter))
+	Instance.SetOutput(NewCustomMultiWriter(fileWriter, os.Stdout))
 	return nil
 }
 

@@ -8,20 +8,20 @@ import (
 	"time"
 )
 
-type CustomWriter struct {
+type FileWriter struct {
 	mu       sync.Mutex
 	file     *os.File
 	rootPath string
 }
 
-func NewCustomWriter(rootPath string) (*CustomWriter, error) {
-	return &CustomWriter{
+func NewFileWriter(rootPath string) (*FileWriter, error) {
+	return &FileWriter{
 		rootPath: rootPath,
 	}, nil
 }
 
 // Write 实现 io.Writer 接口
-func (w *CustomWriter) Write(p []byte) (n int, err error) {
+func (w *FileWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -41,7 +41,7 @@ func (w *CustomWriter) Write(p []byte) (n int, err error) {
 }
 
 // Close 关闭文件
-func (w *CustomWriter) Close() error {
+func (w *FileWriter) Close() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
