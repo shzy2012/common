@@ -170,15 +170,18 @@ func Paincln(v ...interface{}) {
 
 // Printf Printf
 func Printf(format string, v ...interface{}) {
+	Instance.SetPrefix("")
 	_ = Instance.Output(2, fmt.Sprintf(format, v...))
 }
 
 // Println Println
 func Println(v ...interface{}) {
+	Instance.SetPrefix("")
 	_ = Instance.Output(2, fmt.Sprintln(v...))
 }
 
 // Print Print
 func Print(v ...interface{}) {
+	Instance.SetPrefix("")
 	_ = Instance.Output(2, fmt.Sprint(v...))
 }
