@@ -1,11 +1,10 @@
 package network
 
 import (
-	"fmt"
 	"net/http"
 )
 
-//HTTPResponse http响应
+// HTTPResponse http响应
 type HTTPResponse struct {
 	StatusCode         int
 	Status             string
@@ -14,7 +13,7 @@ type HTTPResponse struct {
 	OriginHTTPResponse *http.Response
 }
 
-//ToString 将http body转化为字符串
+// ToString 将http body转化为字符串
 func (r *HTTPResponse) ToString() string {
-	return fmt.Sprintf("%s", r.ResponseBodyBytes)
+	return string(r.ResponseBodyBytes)
 }

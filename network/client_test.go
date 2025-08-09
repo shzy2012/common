@@ -1,10 +1,11 @@
 package network
 
 import (
-	"fmt"
+	"bytes"
+	"crypto/tls"
 	"io"
-	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -12,172 +13,720 @@ import (
 	"github.com/shzy2012/common/errors"
 )
 
-func Test_PostWithNetError(t *testing.T) {
+// 测试服务器响应函数类型
+type testHandlerFunc func(w http.ResponseWriter, r *http.Request)
 
-	client := NewClient()
-	client.SetHTTPTimeout(5)
-	_, err := client.Request("POST", "http://aaabbbxxxyyyyzzzzzz.info", []byte(""), 1)
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
-		} else {
-			t.Error("[Test_PostWithNetError]=> failed.")
-		}
-	}
-}
-func Test_PostWithTransport(t *testing.T) {
-
-	client := NewClient()
-	transport := &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   3 * time.Second,
-			KeepAlive: 3 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second, //限制client在发送包含 Expect: 100-continue的header到收到继续发送body的response之间的时间等待。
-		MaxIdleConns:          30,              //连接池对所有host的最大连接数量，默认无穷大
-		MaxConnsPerHost:       30,              //连接池对每个host的最大连接数量。
-		IdleConnTimeout:       30 * time.Minute,
-		DisableKeepAlives:     false,
-	}
-
-	client.SetTransport(transport)
-	_, err := client.Request("POST", "http://aaabbbxxxyyyyzzzzzz.info", []byte(""), 1)
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithTransport]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
-		} else {
-			t.Error("[Test_PostWithTransport]=> failed.")
-		}
-	}
+// 创建测试服务器
+func createTestServer(handler testHandlerFunc) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(handler))
 }
 
-func Test_Request1(t *testing.T) {
-	client := NewClient()
-	client.SetHTTPTimeout(3)
-	_, err := client.Request("POST", "http://aaabbbxxxyyyyzzzzzz.info", []byte(`{"name":"request"}`), 3)
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
-		} else {
-			t.Error("[Test_PostWithNetError]=> failed.")
-		}
-	}
-}
-
-func Test_Request2(t *testing.T) {
-
-	client := NewClient()
-	_, err := client.Request("POST", "http://qq.com", []byte(`错误的json`), 3)
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
-		} else {
-			t.Error("[Test_PostWithNetError]=> failed.")
-		}
-	}
-}
-
-func Test_HttpGet(t *testing.T) {
-
-	_, err := HTTPGet("http://qq.com")
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if _, ok := err.(*errors.ClientError); ok {
-
-		} else {
-			t.Error("[Test_PostWithNetError]=> failed.")
-		}
-	}
-}
-
-func Test_HTTPost(t *testing.T) {
-
-	_, err := HTTPost("http://qq.com", []byte(`data`))
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if cErr, ok := err.(*errors.ClientError); ok {
-			t.Error("[Test_Http404]=> failed.", cErr)
-		} else {
-			t.Error("[Test_PostWithNetError]=> failed.")
-		}
-	}
-}
-
-// application/x-www-form-urlencoded
-// 数据被编码成以 '&' 分隔的键-值对, 同时以 '=' 分隔键和值.
-// https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/POST#%E7%A4%BA%E4%BE%8B
-func Test_HTTPostWithXwwwFormUrlencoded(t *testing.T) {
-
-	client := NewClient()
-	client.Header["Content-Type"] = XwwwFormUrlencoded
-	resp, err := client.Request(POST, "http://xxxx/login.action", []byte("username=aaa&password=bbb&os_cookie=true"), 0)
-	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_PostWithNetError]=> failed.", serErr)
-		} else if cErr, ok := err.(*errors.ClientError); ok {
-			t.Error("[Test_Http404]=> failed.", cErr)
-		} else {
-			t.Error("[Test_PostWithNetError]=> failed.")
-		}
-	}
-
-	fmt.Printf("%+v\n", resp.OriginHTTPResponse.Cookies())
-}
-
-func Test_PostForm(t *testing.T) {
-
-	file := "local_or_remote.wav"
-	param := fmt.Sprintf(`{
-		"dialog":{
-			"productId": "914010631"
-		},
-		"metaObject":{
-			"recordId": "123457",
-			"priority": 100,
-			"speechSeparate": true,
-			"path":"%s"
-		}
-	}`, file)
-
-	formdata := map[string]io.Reader{
-		"param": strings.NewReader(param),
-		"file":  strings.NewReader(file),
-	}
-
+// 测试 NewClient 函数
+func TestNewClient(t *testing.T) {
 	client := NewClient()
 
-	asrURL := "http://api.talkinggenie.com/smart/sinspection/api/v1/filePathUpload"
-	resp, err := client.PostForm(asrURL, formdata)
-	if err != nil {
-		fmt.Printf("%s\n", err.Error())
-		return
+	if client == nil {
+		t.Fatal("NewClient() returned nil")
 	}
 
-	fmt.Printf("%s\n", resp.ResponseBodyBytes)
+	// 检查默认配置
+	if client.HttpClient == nil {
+		t.Error("HttpClient should not be nil")
+	}
+
+	if client.Header == nil {
+		t.Error("Header should not be nil")
+	}
+
+	if client.Header["User-Agent"] != "go-client 1.0" {
+		t.Errorf("Expected User-Agent 'go-client 1.0', got '%s'", client.Header["User-Agent"])
+	}
+
+	if client.MaxIdleConns != 100 {
+		t.Errorf("Expected MaxIdleConns 100, got %d", client.MaxIdleConns)
+	}
+
+	if client.MaxConnsPerHost != 100 {
+		t.Errorf("Expected MaxConnsPerHost 100, got %d", client.MaxConnsPerHost)
+	}
+
+	if client.MaxIdleConnsPerHost != 10 {
+		t.Errorf("Expected MaxIdleConnsPerHost 10, got %d", client.MaxIdleConnsPerHost)
+	}
+
+	if client.IdleConnTimeout != 90*time.Second {
+		t.Errorf("Expected IdleConnTimeout 90s, got %v", client.IdleConnTimeout)
+	}
+
+	if client.Debug {
+		t.Error("Debug should be false by default")
+	}
 }
 
-func Test_Http404(t *testing.T) {
+// 测试 GET 请求
+func TestClient_Request_GET(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf("Expected GET request, got %s", r.Method)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
 
-	_, err := HTTP.Request("GET", "https://qq.com.cn/abc", nil, 0)
+	client := NewClient()
+	response, err := client.Request("GET", server.URL, nil, 0)
+
 	if err != nil {
-		if serErr, ok := err.(*errors.ServerError); ok {
-			t.Error("[Test_Http404]=> failed.", serErr)
-		} else if cErr, ok := err.(*errors.ClientError); ok {
-			t.Error("[Test_Http404]=> failed.", cErr)
-		} else {
-			t.Error("[Test_Http404]=> failed.")
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+
+	expectedBody := `{"message": "success"}`
+	if string(response.ResponseBodyBytes) != expectedBody {
+		t.Errorf("Expected body '%s', got '%s'", expectedBody, string(response.ResponseBodyBytes))
+	}
+}
+
+// 测试 POST 请求
+func TestClient_Request_POST(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("Expected POST request, got %s", r.Method)
+		}
+
+		// 读取请求体
+		body, _ := io.ReadAll(r.Body)
+		if string(body) != `{"test": "data"}` {
+			t.Errorf("Expected body '{\"test\": \"data\"}', got '%s'", string(body))
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	requestBody := []byte(`{"test": "data"}`)
+	response, err := client.Request("POST", server.URL, requestBody, 0)
+
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+}
+
+// 测试重试机制
+func TestClient_Request_Retry(t *testing.T) {
+	attempts := 0
+	// 创建测试服务器，前两次请求失败，第三次成功
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts < 3 {
+			// 模拟网络错误 - 关闭连接来模拟网络错误
+			hj, ok := w.(http.Hijacker)
+			if ok {
+				conn, _, _ := hj.Hijack()
+				conn.Close()
+			}
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	client.SetHTTPTimeout(5 * time.Second) // 设置较短的超时时间
+
+	response, err := client.Request("GET", server.URL, nil, 2) // 重试2次
+
+	if err != nil {
+		t.Fatalf("Request failed after retries: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+
+	if attempts != 3 {
+		t.Errorf("Expected 3 attempts, got %d", attempts)
+	}
+}
+
+// 测试 BasicAuth
+func TestClient_Request_BasicAuth(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		username, password, ok := r.BasicAuth()
+		if !ok {
+			t.Error("BasicAuth not found in request")
+		}
+		if username != "testuser" || password != "testpass" {
+			t.Errorf("Expected username 'testuser' and password 'testpass', got '%s' and '%s'", username, password)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	client.Auth = BasicAuth{Username: "testuser", Password: "testpass"}
+
+	response, err := client.Request("GET", server.URL, nil, 0)
+
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+}
+
+// 测试自定义 Header
+func TestClient_Request_CustomHeader(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		customHeader := r.Header.Get("X-Custom-Header")
+		if customHeader != "custom-value" {
+			t.Errorf("Expected X-Custom-Header 'custom-value', got '%s'", customHeader)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	client.Header["X-Custom-Header"] = "custom-value"
+
+	response, err := client.Request("GET", server.URL, nil, 0)
+
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+}
+
+// 测试 Cookie
+func TestClient_Request_Cookie(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			t.Errorf("Cookie 'session' not found: %v", err)
+		}
+		if cookie.Value != "abc123" {
+			t.Errorf("Expected cookie value 'abc123', got '%s'", cookie.Value)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	cookie := &http.Cookie{Name: "session", Value: "abc123"}
+	client.SetCookie(cookie)
+
+	response, err := client.Request("GET", server.URL, nil, 0)
+
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+}
+
+// 测试错误状态码
+func TestClient_Request_ErrorStatusCode(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Not Found", http.StatusNotFound)
+	})
+	defer server.Close()
+
+	client := NewClient()
+	response, err := client.Request("GET", server.URL, nil, 0)
+
+	if err == nil {
+		t.Error("Expected error for 404 status code")
+	}
+
+	if response.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status 404, got %d", response.StatusCode)
+	}
+
+	// 检查错误类型
+	if _, ok := err.(*errors.ServerError); !ok {
+		t.Errorf("Expected ServerError, got %T", err)
+	}
+}
+
+// 测试 SetHTTPTimeout
+func TestClient_SetHTTPTimeout(t *testing.T) {
+	client := NewClient()
+	timeout := 30 * time.Second
+	client.SetHTTPTimeout(timeout)
+
+	if client.HttpClient.Timeout != timeout {
+		t.Errorf("Expected timeout %v, got %v", timeout, client.HttpClient.Timeout)
+	}
+}
+
+// 测试 SetConnectionPool
+func TestClient_SetConnectionPool(t *testing.T) {
+	client := NewClient()
+
+	maxIdleConns := 50
+	maxConnsPerHost := 50
+	maxIdleConnsPerHost := 5
+	idleConnTimeout := 60 * time.Second
+
+	client.SetConnectionPool(maxIdleConns, maxConnsPerHost, maxIdleConnsPerHost, idleConnTimeout)
+
+	if client.MaxIdleConns != maxIdleConns {
+		t.Errorf("Expected MaxIdleConns %d, got %d", maxIdleConns, client.MaxIdleConns)
+	}
+
+	if client.MaxConnsPerHost != maxConnsPerHost {
+		t.Errorf("Expected MaxConnsPerHost %d, got %d", maxConnsPerHost, client.MaxConnsPerHost)
+	}
+
+	if client.MaxIdleConnsPerHost != maxIdleConnsPerHost {
+		t.Errorf("Expected MaxIdleConnsPerHost %d, got %d", maxIdleConnsPerHost, client.MaxIdleConnsPerHost)
+	}
+
+	if client.IdleConnTimeout != idleConnTimeout {
+		t.Errorf("Expected IdleConnTimeout %v, got %v", idleConnTimeout, client.IdleConnTimeout)
+	}
+}
+
+// 测试 SetDebug
+func TestClient_SetDebug(t *testing.T) {
+	client := NewClient()
+
+	if client.Debug {
+		t.Error("Debug should be false by default")
+	}
+
+	client.SetDebug(true)
+	if !client.Debug {
+		t.Error("Debug should be true after SetDebug(true)")
+	}
+
+	client.SetDebug(false)
+	if client.Debug {
+		t.Error("Debug should be false after SetDebug(false)")
+	}
+}
+
+// 测试 Cookie 操作
+func TestClient_CookieOperations(t *testing.T) {
+	client := NewClient()
+
+	// 测试 SetCookie
+	cookie1 := &http.Cookie{Name: "session", Value: "abc123"}
+	cookie2 := &http.Cookie{Name: "user", Value: "john"}
+
+	client.SetCookie(cookie1)
+	client.SetCookie(cookie2)
+
+	if len(client.Cookies) != 2 {
+		t.Errorf("Expected 2 cookies, got %d", len(client.Cookies))
+	}
+
+	// 测试 ClearCookies
+	client.ClearCookies()
+	if len(client.Cookies) != 0 {
+		t.Errorf("Expected 0 cookies after clear, got %d", len(client.Cookies))
+	}
+}
+
+// 测试 Close
+func TestClient_Close(t *testing.T) {
+	client := NewClient()
+
+	// 添加一些数据
+	client.Header["Test-Header"] = "test-value"
+	client.SetCookie(&http.Cookie{Name: "test", Value: "value"})
+
+	err := client.Close()
+	if err != nil {
+		t.Errorf("Close() returned error: %v", err)
+	}
+
+	// 检查是否清空了数据
+	if len(client.Header) != 0 {
+		t.Error("Header should be empty after Close()")
+	}
+
+	if len(client.Cookies) != 0 {
+		t.Error("Cookies should be empty after Close()")
+	}
+}
+
+// 测试 PostForm (multipart/form-data)
+func TestClient_PostForm(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("Expected POST request, got %s", r.Method)
+		}
+
+		contentType := r.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "multipart/form-data") {
+			t.Errorf("Expected multipart/form-data Content-Type, got %s", contentType)
+		}
+
+		// 解析 multipart 表单
+		err := r.ParseMultipartForm(32 << 20)
+		if err != nil {
+			t.Errorf("Failed to parse multipart form: %v", err)
+		}
+
+		// 检查表单字段
+		if r.FormValue("source") != "post" {
+			t.Errorf("Expected form field 'source' to be 'post', got '%s'", r.FormValue("source"))
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+
+	// 创建表单数据 - 使用 bytes.NewReader 而不是 strings.NewReader
+	form := map[string]io.Reader{
+		"source": bytes.NewReader([]byte("post")),
+	}
+
+	response, err := client.PostForm(server.URL, form)
+
+	if err != nil {
+		t.Fatalf("PostForm failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+}
+
+// 测试 PostForm2 (x-www-form-urlencoded)
+func TestClient_PostForm2(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("Expected POST request, got %s", r.Method)
+		}
+
+		contentType := r.Header.Get("Content-Type")
+		if contentType != XwwwFormUrlencoded {
+			t.Errorf("Expected Content-Type %s, got %s", XwwwFormUrlencoded, contentType)
+		}
+
+		// 解析表单数据
+		err := r.ParseForm()
+		if err != nil {
+			t.Errorf("Failed to parse form: %v", err)
+		}
+
+		// 检查表单字段
+		if r.FormValue("name") != "john" {
+			t.Errorf("Expected form field 'name' to be 'john', got '%s'", r.FormValue("name"))
+		}
+
+		if r.FormValue("age") != "25" {
+			t.Errorf("Expected form field 'age' to be '25', got '%s'", r.FormValue("age"))
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+
+	// 创建表单数据
+	values := map[string]string{
+		"name": "john",
+		"age":  "25",
+	}
+
+	response, err := client.PostForm2(server.URL, values)
+
+	if err != nil {
+		t.Fatalf("PostForm2 failed: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", response.StatusCode)
+	}
+}
+
+// 测试全局函数
+func TestHTTPGet(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf("Expected GET request, got %s", r.Method)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	response, err := HTTPGet(server.URL)
+
+	if err != nil {
+		t.Fatalf("HTTPGet failed: %v", err)
+	}
+
+	expectedBody := `{"message": "success"}`
+	if string(response) != expectedBody {
+		t.Errorf("Expected body '%s', got '%s'", expectedBody, string(response))
+	}
+}
+
+func TestHTTPost(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("Expected POST request, got %s", r.Method)
+		}
+
+		body, _ := io.ReadAll(r.Body)
+		if string(body) != `{"test": "data"}` {
+			t.Errorf("Expected body '{\"test\": \"data\"}', got '%s'", string(body))
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	requestBody := []byte(`{"test": "data"}`)
+	response, err := HTTPost(server.URL, requestBody)
+
+	if err != nil {
+		t.Fatalf("HTTPost failed: %v", err)
+	}
+
+	expectedBody := `{"message": "success"}`
+	if string(response) != expectedBody {
+		t.Errorf("Expected body '%s', got '%s'", expectedBody, string(response))
+	}
+}
+
+func TestHTTPPostForm(t *testing.T) {
+	// 创建测试服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("Expected POST request, got %s", r.Method)
+		}
+
+		contentType := r.Header.Get("Content-Type")
+		if contentType != XwwwFormUrlencoded {
+			t.Errorf("Expected Content-Type %s, got %s", XwwwFormUrlencoded, contentType)
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			t.Errorf("Failed to parse form: %v", err)
+		}
+
+		if r.FormValue("name") != "john" {
+			t.Errorf("Expected form field 'name' to be 'john', got '%s'", r.FormValue("name"))
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	values := map[string]string{
+		"name": "john",
+	}
+
+	response, err := HTTPPostForm(server.URL, values)
+
+	if err != nil {
+		t.Fatalf("HTTPPostForm failed: %v", err)
+	}
+
+	expectedBody := `{"message": "success"}`
+	if string(response) != expectedBody {
+		t.Errorf("Expected body '%s', got '%s'", expectedBody, string(response))
+	}
+}
+
+// 测试连接池统计信息
+func TestClient_GetConnectionPoolStats(t *testing.T) {
+	client := NewClient()
+
+	stats := client.GetConnectionPoolStats()
+
+	// 检查必要的字段
+	requiredFields := []string{
+		"MaxIdleConns",
+		"MaxConnsPerHost",
+		"MaxIdleConnsPerHost",
+		"IdleConnTimeout",
+		"CurrentMaxIdleConns",
+		"CurrentMaxConnsPerHost",
+		"CurrentMaxIdleConnsPerHost",
+		"CurrentIdleConnTimeout",
+	}
+
+	for _, field := range requiredFields {
+		if _, exists := stats[field]; !exists {
+			t.Errorf("Stats missing required field: %s", field)
+		}
+	}
+}
+
+// 测试 SetTransport
+func TestClient_SetTransport(t *testing.T) {
+	client := NewClient()
+
+	// 创建自定义 Transport
+	customTransport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client.SetTransport(customTransport)
+
+	if client.HttpClient.Transport != customTransport {
+		t.Error("Transport was not set correctly")
+	}
+}
+
+// 测试各种 HTTP 方法
+func TestClient_Request_AllMethods(t *testing.T) {
+	methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+
+	for _, method := range methods {
+		t.Run(method, func(t *testing.T) {
+			// 创建测试服务器
+			server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != method {
+					t.Errorf("Expected %s request, got %s", method, r.Method)
+				}
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"message": "success"}`))
+			})
+			defer server.Close()
+
+			client := NewClient()
+			var input []byte
+			if method == "POST" || method == "PUT" || method == "PATCH" {
+				input = []byte(`{"test": "data"}`)
+			}
+
+			response, err := client.Request(method, server.URL, input, 0)
+
+			if err != nil {
+				t.Fatalf("Request failed for method %s: %v", method, err)
+			}
+
+			if response.StatusCode != http.StatusOK {
+				t.Errorf("Expected status 200 for method %s, got %d", method, response.StatusCode)
+			}
+		})
+	}
+}
+
+// 测试错误处理 - 无效 URL
+func TestClient_Request_InvalidURL(t *testing.T) {
+	client := NewClient()
+
+	response, err := client.Request("GET", "invalid-url", nil, 0)
+
+	if err == nil {
+		t.Error("Expected error for invalid URL")
+	}
+
+	if response == nil {
+		t.Error("Response should not be nil even on error")
+	}
+
+	// 检查错误类型
+	if _, ok := err.(*errors.ClientError); !ok {
+		t.Errorf("Expected ClientError, got %T", err)
+	}
+}
+
+// 测试错误处理 - 网络超时
+func TestClient_Request_Timeout(t *testing.T) {
+	// 创建一个很慢的服务器
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(2 * time.Second) // 延迟2秒
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	client.SetHTTPTimeout(1 * time.Second) // 设置1秒超时
+
+	response, err := client.Request("GET", server.URL, nil, 0)
+
+	if err == nil {
+		t.Error("Expected timeout error")
+	}
+
+	if response == nil {
+		t.Error("Response should not be nil even on timeout")
+	}
+}
+
+// 基准测试
+func BenchmarkClient_Request_GET(b *testing.B) {
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := client.Request("GET", server.URL, nil, 0)
+		if err != nil {
+			b.Fatalf("Request failed: %v", err)
+		}
+	}
+}
+
+func BenchmarkClient_Request_POST(b *testing.B) {
+	server := createTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "success"}`))
+	})
+	defer server.Close()
+
+	client := NewClient()
+	requestBody := []byte(`{"test": "data"}`)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := client.Request("POST", server.URL, requestBody, 0)
+		if err != nil {
+			b.Fatalf("Request failed: %v", err)
 		}
 	}
 }
