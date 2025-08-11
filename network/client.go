@@ -50,13 +50,13 @@ type Client struct {
 	HttpClient          *http.Client
 	Header              map[string]string
 	Version             string
-	MaxIdleConns        int
-	MaxConnsPerHost     int
-	IdleConnTimeout     time.Duration
-	MaxIdleConnsPerHost int
 	Debug               bool
 	Auth                BasicAuth
 	Cookies             []*http.Cookie
+	maxIdleConns        int
+	maxConnsPerHost     int
+	idleConnTimeout     time.Duration
+	maxIdleConnsPerHost int
 }
 
 // BasicAuth 基础认证
@@ -91,10 +91,10 @@ func NewClient() *Client {
 
 	client := &Client{
 		// 用于存储配置值，方便用户查询和修改
-		MaxIdleConns:        maxIdleConns,
-		MaxConnsPerHost:     maxConnsPerHost,
-		IdleConnTimeout:     idleConnTimeout,
-		MaxIdleConnsPerHost: maxIdleConnsPerHost,
+		maxIdleConns:        maxIdleConns,
+		maxConnsPerHost:     maxConnsPerHost,
+		idleConnTimeout:     idleConnTimeout,
+		maxIdleConnsPerHost: maxIdleConnsPerHost,
 		Debug:               false,
 		Header:              header,
 		HttpClient: &http.Client{
@@ -229,10 +229,10 @@ func (c *Client) SetHTTPTimeout(timeout time.Duration) {
 
 // SetConnectionPool 设置连接池参数
 func (c *Client) SetConnectionPool(maxIdleConns, maxConnsPerHost, maxIdleConnsPerHost int, idleConnTimeout time.Duration) {
-	c.MaxIdleConns = maxIdleConns
-	c.MaxConnsPerHost = maxConnsPerHost
-	c.MaxIdleConnsPerHost = maxIdleConnsPerHost
-	c.IdleConnTimeout = idleConnTimeout
+	c.maxIdleConns = maxIdleConns
+	c.maxConnsPerHost = maxConnsPerHost
+	c.maxIdleConnsPerHost = maxIdleConnsPerHost
+	c.idleConnTimeout = idleConnTimeout
 
 	// 更新Transport配置
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
@@ -245,7 +245,7 @@ func (c *Client) SetConnectionPool(maxIdleConns, maxConnsPerHost, maxIdleConnsPe
 
 // SetMaxIdleConns 设置最大空闲连接数
 func (c *Client) SetMaxIdleConns(maxIdleConns int) {
-	c.MaxIdleConns = maxIdleConns
+	c.maxIdleConns = maxIdleConns
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
 		transport.MaxIdleConns = maxIdleConns
 	}
@@ -253,7 +253,7 @@ func (c *Client) SetMaxIdleConns(maxIdleConns int) {
 
 // SetMaxConnsPerHost 设置每个主机的最大连接数
 func (c *Client) SetMaxConnsPerHost(maxConnsPerHost int) {
-	c.MaxConnsPerHost = maxConnsPerHost
+	c.maxConnsPerHost = maxConnsPerHost
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
 		transport.MaxConnsPerHost = maxConnsPerHost
 	}
@@ -261,7 +261,7 @@ func (c *Client) SetMaxConnsPerHost(maxConnsPerHost int) {
 
 // SetIdleConnTimeout 设置空闲连接超时时间
 func (c *Client) SetIdleConnTimeout(timeout time.Duration) {
-	c.IdleConnTimeout = timeout
+	c.idleConnTimeout = timeout
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
 		transport.IdleConnTimeout = timeout
 	}
@@ -269,7 +269,7 @@ func (c *Client) SetIdleConnTimeout(timeout time.Duration) {
 
 // SetMaxIdleConnsPerHost 设置每个主机的最大空闲连接数
 func (c *Client) SetMaxIdleConnsPerHost(maxIdleConnsPerHost int) {
-	c.MaxIdleConnsPerHost = maxIdleConnsPerHost
+	c.maxIdleConnsPerHost = maxIdleConnsPerHost
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
 		transport.MaxIdleConnsPerHost = maxIdleConnsPerHost
 	}
@@ -278,10 +278,10 @@ func (c *Client) SetMaxIdleConnsPerHost(maxIdleConnsPerHost int) {
 // GetConnectionPoolStats 获取连接池统计信息
 func (c *Client) GetConnectionPoolStats() map[string]interface{} {
 	stats := map[string]interface{}{
-		"MaxIdleConns":        c.MaxIdleConns,
-		"MaxConnsPerHost":     c.MaxConnsPerHost,
-		"MaxIdleConnsPerHost": c.MaxIdleConnsPerHost,
-		"IdleConnTimeout":     c.IdleConnTimeout,
+		"MaxIdleConns":        c.maxIdleConns,
+		"MaxConnsPerHost":     c.maxConnsPerHost,
+		"MaxIdleConnsPerHost": c.maxIdleConnsPerHost,
+		"IdleConnTimeout":     c.idleConnTimeout,
 	}
 
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {

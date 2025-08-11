@@ -42,20 +42,20 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("Expected User-Agent 'go-client 1.0', got '%s'", client.Header["User-Agent"])
 	}
 
-	if client.MaxIdleConns != 100 {
-		t.Errorf("Expected MaxIdleConns 100, got %d", client.MaxIdleConns)
+	if client.maxIdleConns != 100 {
+		t.Errorf("Expected MaxIdleConns 100, got %d", client.maxIdleConns)
 	}
 
-	if client.MaxConnsPerHost != 100 {
-		t.Errorf("Expected MaxConnsPerHost 100, got %d", client.MaxConnsPerHost)
+	if client.maxConnsPerHost != 100 {
+		t.Errorf("Expected MaxConnsPerHost 100, got %d", client.maxConnsPerHost)
 	}
 
-	if client.MaxIdleConnsPerHost != 10 {
-		t.Errorf("Expected MaxIdleConnsPerHost 10, got %d", client.MaxIdleConnsPerHost)
+	if client.maxIdleConnsPerHost != 10 {
+		t.Errorf("Expected MaxIdleConnsPerHost 10, got %d", client.maxIdleConnsPerHost)
 	}
 
-	if client.IdleConnTimeout != 90*time.Second {
-		t.Errorf("Expected IdleConnTimeout 90s, got %v", client.IdleConnTimeout)
+	if client.idleConnTimeout != 90*time.Second {
+		t.Errorf("Expected IdleConnTimeout 90s, got %v", client.idleConnTimeout)
 	}
 
 	if client.Debug {
@@ -297,20 +297,20 @@ func TestClient_SetConnectionPool(t *testing.T) {
 
 	client.SetConnectionPool(maxIdleConns, maxConnsPerHost, maxIdleConnsPerHost, idleConnTimeout)
 
-	if client.MaxIdleConns != maxIdleConns {
-		t.Errorf("Expected MaxIdleConns %d, got %d", maxIdleConns, client.MaxIdleConns)
+	if client.maxIdleConns != maxIdleConns {
+		t.Errorf("Expected MaxIdleConns %d, got %d", maxIdleConns, client.maxIdleConns)
 	}
 
-	if client.MaxConnsPerHost != maxConnsPerHost {
-		t.Errorf("Expected MaxConnsPerHost %d, got %d", maxConnsPerHost, client.MaxConnsPerHost)
+	if client.maxConnsPerHost != maxConnsPerHost {
+		t.Errorf("Expected MaxConnsPerHost %d, got %d", maxConnsPerHost, client.maxConnsPerHost)
 	}
 
-	if client.MaxIdleConnsPerHost != maxIdleConnsPerHost {
-		t.Errorf("Expected MaxIdleConnsPerHost %d, got %d", maxIdleConnsPerHost, client.MaxIdleConnsPerHost)
+	if client.maxIdleConnsPerHost != maxIdleConnsPerHost {
+		t.Errorf("Expected MaxIdleConnsPerHost %d, got %d", maxIdleConnsPerHost, client.maxIdleConnsPerHost)
 	}
 
-	if client.IdleConnTimeout != idleConnTimeout {
-		t.Errorf("Expected IdleConnTimeout %v, got %v", idleConnTimeout, client.IdleConnTimeout)
+	if client.idleConnTimeout != idleConnTimeout {
+		t.Errorf("Expected IdleConnTimeout %v, got %v", idleConnTimeout, client.idleConnTimeout)
 	}
 }
 
