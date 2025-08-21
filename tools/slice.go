@@ -1,35 +1,50 @@
 package tools
 
-func DistinectIntSlice(slice []int) []int {
-	keys := make(map[int]bool)
-	list := []int{}
+// Distinct removes duplicate elements from a slice while preserving order.
+// It works with any comparable type.
+func Distinct[T comparable](slice []T) []T {
+	if len(slice) == 0 {
+		return slice
+	}
+
+	keys := make(map[T]bool, len(slice))
+	result := make([]T, 0, len(slice))
+
 	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
+		if !keys[entry] {
 			keys[entry] = true
-			list = append(list, entry)
+			result = append(result, entry)
 		}
 	}
-	return list
+	return result
 }
 
-func DistinectStringSlice(slice []string) []string {
-	keys := make(map[string]bool)
-	list := []string{}
-	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
-}
-
-func Contains(value string, slice []string) bool {
-
+// Contains checks if a value exists in a slice.
+// It works with any comparable type.
+func Contains[T comparable](value T, slice []T) bool {
 	for _, ele := range slice {
 		if ele == value {
 			return true
 		}
 	}
 	return false
+}
+
+// Reverse reverses the order of elements in a slice.
+// The original slice is modified in place.
+func Reverse[T any](arr []T) []T {
+	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+	return arr
+}
+
+// ReverseCopy creates a new slice with reversed order.
+// The original slice remains unchanged.
+func ReverseCopy[T any](arr []T) []T {
+	result := make([]T, len(arr))
+	for i, j := 0, len(arr)-1; i < len(arr); i, j = i+1, j-1 {
+		result[i] = arr[j]
+	}
+	return result
 }

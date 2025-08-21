@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"net/url"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -160,4 +162,109 @@ func TimeAgo(t time.Time) string {
 	default:
 		return fmt.Sprintf("%d years ago", int(duration.Hours()/(24*365)))
 	}
+}
+
+func IsEmpty(str string) bool {
+	return strings.TrimSpace(str) == ""
+}
+
+// URL Join
+func JoinURL(base string, paths ...string) string {
+	u, _ := url.Parse(base)
+	u.Path = path.Join(u.Path, path.Join(paths...))
+	return u.String()
+}
+
+// Trim  trim string
+func Trim(str string) string {
+	return strings.TrimSpace(str)
+}
+
+// 截取包含中文的字符串
+func SubString(str string, f, e int) string {
+	return string([]rune(str)[f:e])
+}
+
+// slice 去重
+func Unique(slice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, ele := range slice {
+		if _, value := keys[ele]; !value {
+			keys[ele] = true
+			list = append(list, ele)
+		}
+	}
+	return list
+}
+
+// MergeAndUnique 合并多个字符串数组，并确保内容唯一
+func MergeAndUnique(arrays ...[]string) []string {
+	uniqueMap := make(map[string]struct{})
+
+	// 遍历每个数组并添加到 map 中
+	for _, arr := range arrays {
+		for _, item := range arr {
+			uniqueMap[item] = struct{}{}
+		}
+	}
+
+	// 将唯一元素添加到切片中
+	var merged []string
+	for key := range uniqueMap {
+		merged = append(merged, key)
+	}
+
+	return merged
+}
+
+// 字符串首字母大写
+func UpperA(s string) string {
+	if s == "" {
+		return ""
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func FindVariables(text string) []string {
+
+	result := make([]string, 0)
+	re := regexp.MustCompile(`<([^>]+)>`)
+	matches := re.FindAllStringSubmatch(text, -1)
+	if len(matches) > 0 {
+		for _, match := range matches {
+			// match[0] 是整个匹配的字符串，包括尖括号。
+			// match[1] 是捕获组匹配的内容，即尖括号之间的字符串。
+			result = append(result, match[1])
+		}
+	}
+	return result
+}
+
+// 将Map key转化为数组
+func MapKey2Array[T comparable](m map[T]interface{}) []T {
+	a := make([]T, 0)
+	for k := range m {
+		a = append(a, k)
+	}
+	return a
+}
+
+// 避免显示乱码
+func CheckNil(i interface{}) string {
+	switch v := i.(type) {
+	case nil:
+		return ""
+	case int, float64, bool:
+		return fmt.Sprintf("%v", v)
+	case string:
+		return v
+	default:
+		return ""
+	}
+}
+
+// 添加随机延迟 0-n 毫秒
+func Sleep(t int) {
+	time.Sleep(time.Duration(r.Intn(t)) * time.Millisecond)
 }
