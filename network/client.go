@@ -14,6 +14,7 @@ import (
 
 	"github.com/shzy2012/common/errors"
 	"github.com/shzy2012/common/log"
+	"github.com/shzy2012/common/tools"
 )
 
 // HTTP Client
@@ -117,6 +118,12 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 
 	var err error
 	response := &HTTPResponse{}
+
+	url, err = tools.URLCheck(url)
+	if err != nil {
+		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
+		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
+	}
 
 	if c.Debug {
 		log.Debugf("[http_request]=>%s to %s \n%s\n", action, url, input)
