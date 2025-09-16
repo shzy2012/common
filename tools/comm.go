@@ -202,7 +202,9 @@ func GetDate(v string) (time.Time, error) {
 	// Try common date formats
 	formats := []string{
 		"2006-01-02",
+		"2006-1-2",
 		"2006/01/02",
+		"2006/1/2",
 		"02-01-2006",
 		"02/01/2006",
 		"2006.01.02",
