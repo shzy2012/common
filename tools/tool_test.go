@@ -3,7 +3,6 @@ package tools
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 func Test_AutoIncrementing(t *testing.T) {
@@ -15,7 +14,6 @@ func Test_AutoIncrementing(t *testing.T) {
 		}(n)
 	}
 
-	time.Sleep(time.Second * 1)
 }
 
 func Test_Sum(t *testing.T) {
