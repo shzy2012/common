@@ -30,6 +30,24 @@ func Contains[T comparable](value T, slice []T) bool {
 	return false
 }
 
+func InArray[T comparable](slice []T, item T) bool {
+	for _, ele := range slice {
+		if ele == item {
+			return true
+		}
+	}
+	return false
+}
+
+func RemoveArray[T comparable](slice []T, item T) []T {
+	for i, ele := range slice {
+		if ele == item {
+			slice = append(slice[:i], slice[i+1:]...)
+		}
+	}
+	return slice
+}
+
 // Reverse reverses the order of elements in a slice.
 // The original slice is modified in place.
 func Reverse[T any](arr []T) []T {
