@@ -369,6 +369,11 @@ func Get(url string) ([]byte, error) {
 	return GetWithContext(context.Background(), url)
 }
 
+// 发起HTTP Get请求（兼容）
+func HTTPGet(url string) ([]byte, error) {
+	return GetWithContext(context.Background(), url)
+}
+
 // 发起带 Context 的 HTTP Get 请求
 func GetWithContext(ctx context.Context, url string) ([]byte, error) {
 	response, err := HTTP.RequestWithContext(ctx, "GET", url, nil, 0)
@@ -377,6 +382,11 @@ func GetWithContext(ctx context.Context, url string) ([]byte, error) {
 
 // 发起HTTP Post请求
 func Post(url string, input []byte) ([]byte, error) {
+	return PostWithContext(context.Background(), url, input)
+}
+
+// 发起HTTP Post请求（兼容）
+func HTTPPost(url string, input []byte) ([]byte, error) {
 	return PostWithContext(context.Background(), url, input)
 }
 
