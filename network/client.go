@@ -2,6 +2,7 @@ package network
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -65,7 +66,7 @@ type BasicAuth struct {
 	Username, Password string
 }
 
-// NewClient  实例化http client
+// 实例化http client
 func NewClient() *Client {
 
 	header := map[string]string{"User-Agent": "go-client 1.0"}
@@ -108,16 +109,25 @@ func NewClient() *Client {
 	return client
 }
 
-/* Request 发起HTTP请求
+/* 发起HTTP请求
 * action:POST\GET\PUT\PATCH\DELETE\HEAD\OPTIONS\TRACE\CONNECT
 * url:请求地址
 * input:请求参数
 * retry:重试次数,默认0(不重试)
  */
 func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResponse, error) {
+	return c.RequestWithContext(context.Background(), action, url, input, retry)
+}
 
-	var err error
-	response := &HTTPResponse{}
+/* 发起带Context的HTTP请求
+* ctx: Context
+* action:POST\GET\PUT\PATCH\DELETE\HEAD\OPTIONS\TRACE\CONNECT
+* url:请求地址
+* input:请求参数
+* retry:重试次数,默认0(不重试)
+ */
+func (c *Client) RequestWithContext(ctx context.Context, action, url string, input []byte, retry int) (response *HTTPResponse, err error) {
+	response = &HTTPResponse{}
 
 	url, err = tools.URLCheck(url)
 	if err != nil {
@@ -132,8 +142,13 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	// 简化HTTP方法处理
 	action = strings.ToUpper(action)
 
-	// 构建HTTP请求
-	req, err := http.NewRequest(action, url, bytes.NewReader(input))
+	// 确保retry非负
+	if retry < 0 {
+		retry = 0
+	}
+
+	// 构建HTTP请求模板
+	req, err := http.NewRequestWithContext(ctx, action, url, nil)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
@@ -162,23 +177,37 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 		req.AddCookie(cookie)
 	}
 
-	// 确保retry非负
-	if retry < 0 {
-		retry = 0
-	}
-
-	// 改进重试逻辑
 	var resp *http.Response
 	for i := 0; i <= retry; i++ {
+		// 每次重试都重新设置 Body
+		if input != nil {
+			bodyBytes := input
+			req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+			req.ContentLength = int64(len(bodyBytes))
+			req.GetBody = func() (io.ReadCloser, error) {
+				return io.NopCloser(bytes.NewReader(bodyBytes)), nil
+			}
+		}
+
 		resp, err = c.HttpClient.Do(req)
-		if err == nil {
+
+		// 有错误或者状态码不是 2xx
+		isSuccess := err == nil && resp != nil && resp.StatusCode >= 200 && resp.StatusCode < 300
+		if isSuccess || i == retry {
 			break
 		}
 
-		// 如果不是最后一次重试，添加退避时间
-		if i < retry {
-			backoffTime := time.Duration(i+1) * time.Second
-			time.Sleep(backoffTime)
+		// 确保关闭上一次的响应体
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+
+		// 添加退避时间
+		backoffTime := time.Duration(i+1) * time.Second
+		select {
+		case <-ctx.Done():
+			return response, ctx.Err()
+		case <-time.After(backoffTime):
 		}
 	}
 
@@ -190,7 +219,6 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	// 确保响应体被正确关闭
 	if resp != nil && resp.Body != nil {
 		defer func() {
-			// 关闭响应体
 			closeErr := resp.Body.Close()
 			if err == nil && closeErr != nil {
 				err = closeErr
@@ -202,17 +230,18 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	response.Status = resp.Status
 	response.OriginHTTPResponse = resp // 原始的Http Response
 
-	bytes, err := io.ReadAll(resp.Body)
+	// 注意：大规模响应体可能有 OOM 风险
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
 
 	if c.Debug {
-		log.Debugf("[http_response]=>%s \n", bytes)
+		log.Debugf("[http_response]=>%s \n", bodyBytes)
 	}
 
-	response.ResponseBodyBytes = bytes // http 响应体
+	response.ResponseBodyBytes = bodyBytes // http 响应体
 
 	// 处理HTTP状态码
 	switch response.StatusCode {
@@ -224,17 +253,17 @@ func (c *Client) Request(action, url string, input []byte, retry int) (*HTTPResp
 	}
 }
 
-// SetTransport 设置Transport
+// 设置Transport
 func (c *Client) SetTransport(transport http.RoundTripper) {
 	c.HttpClient.Transport = transport
 }
 
-// SetHTTPTimeout 设置http 超时时间
+// 设置http 超时时间
 func (c *Client) SetHTTPTimeout(timeout time.Duration) {
 	c.HttpClient.Timeout = timeout
 }
 
-// SetConnectionPool 设置连接池参数
+// 设置连接池参数
 func (c *Client) SetConnectionPool(maxIdleConns, maxConnsPerHost, maxIdleConnsPerHost int, idleConnTimeout time.Duration) {
 	c.maxIdleConns = maxIdleConns
 	c.maxConnsPerHost = maxConnsPerHost
@@ -250,7 +279,7 @@ func (c *Client) SetConnectionPool(maxIdleConns, maxConnsPerHost, maxIdleConnsPe
 	}
 }
 
-// SetMaxIdleConns 设置最大空闲连接数
+// 设置最大空闲连接数
 func (c *Client) SetMaxIdleConns(maxIdleConns int) {
 	c.maxIdleConns = maxIdleConns
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
@@ -258,7 +287,7 @@ func (c *Client) SetMaxIdleConns(maxIdleConns int) {
 	}
 }
 
-// SetMaxConnsPerHost 设置每个主机的最大连接数
+// 设置每个主机的最大连接数
 func (c *Client) SetMaxConnsPerHost(maxConnsPerHost int) {
 	c.maxConnsPerHost = maxConnsPerHost
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
@@ -266,7 +295,7 @@ func (c *Client) SetMaxConnsPerHost(maxConnsPerHost int) {
 	}
 }
 
-// SetIdleConnTimeout 设置空闲连接超时时间
+// 设置空闲连接超时时间
 func (c *Client) SetIdleConnTimeout(timeout time.Duration) {
 	c.idleConnTimeout = timeout
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
@@ -274,7 +303,7 @@ func (c *Client) SetIdleConnTimeout(timeout time.Duration) {
 	}
 }
 
-// SetMaxIdleConnsPerHost 设置每个主机的最大空闲连接数
+// 设置每个主机的最大空闲连接数
 func (c *Client) SetMaxIdleConnsPerHost(maxIdleConnsPerHost int) {
 	c.maxIdleConnsPerHost = maxIdleConnsPerHost
 	if transport, ok := c.HttpClient.Transport.(*http.Transport); ok {
@@ -282,7 +311,7 @@ func (c *Client) SetMaxIdleConnsPerHost(maxIdleConnsPerHost int) {
 	}
 }
 
-// GetConnectionPoolStats 获取连接池统计信息
+// 获取连接池统计信息
 func (c *Client) GetConnectionPoolStats() map[string]interface{} {
 	stats := map[string]interface{}{
 		"MaxIdleConns":        c.maxIdleConns,
@@ -301,22 +330,22 @@ func (c *Client) GetConnectionPoolStats() map[string]interface{} {
 	return stats
 }
 
-// SetDebug 设置debug
+// 设置debug
 func (c *Client) SetDebug(d bool) {
 	c.Debug = d
 }
 
-// SetCookie 添加cookie
+// 添加cookie
 func (c *Client) SetCookie(cookie *http.Cookie) {
 	c.Cookies = append(c.Cookies, cookie)
 }
 
-// ClearCookies 清除cookies
+// 清除cookies
 func (c *Client) ClearCookies() {
 	c.Cookies = c.Cookies[0:0]
 }
 
-// Close 释放客户端资源
+// 释放客户端资源
 func (c *Client) Close() error {
 	// 关闭 HTTP 客户端的传输层
 	if c.HttpClient != nil && c.HttpClient.Transport != nil {
@@ -335,26 +364,41 @@ func (c *Client) Close() error {
 	return nil
 }
 
-// HTTPGet 发起HTTP Get请求
-func HTTPGet(url string) ([]byte, error) {
-	response, err := HTTP.Request("GET", url, nil, 0)
+// 发起HTTP Get请求
+func Get(url string) ([]byte, error) {
+	return GetWithContext(context.Background(), url)
+}
+
+// 发起带 Context 的 HTTP Get 请求
+func GetWithContext(ctx context.Context, url string) ([]byte, error) {
+	response, err := HTTP.RequestWithContext(ctx, "GET", url, nil, 0)
 	return response.ResponseBodyBytes, err
 }
 
-// HTTPost 发起HTTP Post请求
-func HTTPost(url string, input []byte) ([]byte, error) {
-	response, err := HTTP.Request("POST", url, input, 0)
+// 发起HTTP Post请求
+func Post(url string, input []byte) ([]byte, error) {
+	return PostWithContext(context.Background(), url, input)
+}
+
+// 发起带 Context 的 HTTP Post 请求
+func PostWithContext(ctx context.Context, url string, input []byte) ([]byte, error) {
+	response, err := HTTP.RequestWithContext(ctx, "POST", url, input, 0)
 	return response.ResponseBodyBytes, err
 }
 
-// HTTPPostForm 发起HTTP Post x-www-form-urlencoded 请求
-func HTTPPostForm(url string, values map[string]string) ([]byte, error) {
-	response, err := HTTP.PostForm2(url, values)
+// 发起HTTP Post x-www-form-urlencoded 请求
+func PostForm(url string, values map[string]string) ([]byte, error) {
+	return PostFormWithContext(context.Background(), url, values)
+}
+
+// 发起带 Context 的 HTTP Post x-www-form-urlencoded 请求
+func PostFormWithContext(ctx context.Context, url string, values map[string]string) ([]byte, error) {
+	response, err := HTTP.PostForm2WithContext(ctx, url, values)
 	return response.ResponseBodyBytes, err
 }
 
-//PostForm 发起PostForm请求
-//from-data方式
+// 发起PostForm请求
+// from-data方式
 /* example
 file, _ := os.Open("file.png")             //读取文件
 defer file.Close()
@@ -363,10 +407,13 @@ form := map[string]io.Reader{}             //定义form
 form["source"] = strings.NewReader("post") //字符串
 form["file"] = file                        //文件类型
 */
-func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse, error) {
+func (c *Client) PostForm(url string, form map[string]io.Reader) (response *HTTPResponse, err error) {
+	return c.PostFormWithContext(context.Background(), url, form)
+}
 
-	var err error
-	response := &HTTPResponse{}
+// 发起带 Context 的 PostForm 请求
+func (c *Client) PostFormWithContext(ctx context.Context, url string, form map[string]io.Reader) (response *HTTPResponse, err error) {
+	response = &HTTPResponse{}
 
 	// Prepare a form that you will submit to that URL.
 	var b bytes.Buffer
@@ -404,7 +451,7 @@ func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse,
 		}
 	}
 
-	req, err := http.NewRequest("POST", url, &b)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, &b)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
@@ -441,17 +488,17 @@ func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse,
 	response.Status = resp.Status
 	response.OriginHTTPResponse = resp //原始的Http Response
 
-	bytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
 
 	if c.Debug {
-		log.Debugf("[http resp]=>%s \n", bytes)
+		log.Debugf("[http resp]=>%s \n", bodyBytes)
 	}
 
-	response.ResponseBodyBytes = bytes //http 响应体
+	response.ResponseBodyBytes = bodyBytes //http 响应体
 	/*
 		https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/201
 		200 OK
@@ -467,11 +514,14 @@ func (c *Client) PostForm(url string, form map[string]io.Reader) (*HTTPResponse,
 	}
 }
 
-// PostForm2
 // x-www-form-urlencoded 方式
-func (c *Client) PostForm2(url string, values map[string]string) (*HTTPResponse, error) {
-	var err error
-	response := &HTTPResponse{}
+func (c *Client) PostForm2(url string, values map[string]string) (response *HTTPResponse, err error) {
+	return c.PostForm2WithContext(context.Background(), url, values)
+}
+
+// 发起带 Context 的 PostForm2 请求
+func (c *Client) PostForm2WithContext(ctx context.Context, url string, values map[string]string) (response *HTTPResponse, err error) {
+	response = &HTTPResponse{}
 
 	// 构建 x-www-form-urlencoded 数据
 	data := make([]string, 0, len(values))
@@ -490,7 +540,7 @@ func (c *Client) PostForm2(url string, values map[string]string) (*HTTPResponse,
 	}
 
 	// 创建请求
-	req, err := http.NewRequest("POST", url, strings.NewReader(encodedData))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, strings.NewReader(encodedData))
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
@@ -538,17 +588,17 @@ func (c *Client) PostForm2(url string, values map[string]string) (*HTTPResponse,
 	response.Status = resp.Status
 	response.OriginHTTPResponse = resp // 原始的Http Response
 
-	bytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		errMsg := fmt.Sprintf(errors.NetWorkErrorMessage, err.Error())
 		return response, errors.NewClientError(errors.NetWorkErrorCode, errMsg, err)
 	}
 
 	if c.Debug {
-		log.Debugf("[http resp]=>%s \n", bytes)
+		log.Debugf("[http resp]=>%s \n", bodyBytes)
 	}
 
-	response.ResponseBodyBytes = bytes // http 响应体
+	response.ResponseBodyBytes = bodyBytes // http 响应体
 
 	// 处理HTTP状态码
 	switch response.StatusCode {
