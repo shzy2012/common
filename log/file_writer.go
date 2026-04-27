@@ -30,6 +30,10 @@ func (w *FileWriter) Write(p []byte) (n int, err error) {
 	if os.IsNotExist(err) || w.file == nil {
 		if w.file != nil {
 			w.file.Close()
+			w.file = nil
+		}
+		if err := os.MkdirAll(w.rootPath, 0755); err != nil {
+			return 0, fmt.Errorf("failed to create log directory: %v", err)
 		}
 		w.file, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
